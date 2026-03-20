@@ -20,28 +20,35 @@ socketio = SocketIO(app, cors_allowed_origins="*", logger=True, engineio_logger=
 # Store user paths and markers (in production, use a database)
 user_paths = {}
 user_markers = {}
+connected_users = set()
 
+# Main page route
 @app.route('/')
 def index():
     return render_template('index.html')
 
+# Health check route
 @app.route('/health')
 def health():
-    return {'status': 'healthy', 'active_users': len(user_paths)}
+    return {'status': 'healthy', 'active_users': len(connected_users)}
 
+# Handle client connection
 @socketio.on('connect')
 def handle_connect():
     logger.info('Client connected: %s', request.sid)
     try:
+        connected_users.add(request.sid)
         emit('user_id', request.sid)
     except Exception as e:
         logger.error('Error in handle_connect: %s', e)
 
+# Handle client disconnection
 @socketio.on('disconnect')
 def handle_disconnect():
     logger.info('Client disconnected: %s', request.sid)
     user_id = request.sid
     try:
+        connected_users.discard(user_id)
         if user_id in user_paths:
             del user_paths[user_id]
         if user_id in user_markers:
@@ -50,6 +57,7 @@ def handle_disconnect():
     except Exception as e:
         logger.error('Error in handle_disconnect: %s', e)
 
+# Handle location updates from clients
 @socketio.on('location_update')
 def handle_location_update(data):
     user_id = request.sid
