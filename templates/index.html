@@ -30,8 +30,8 @@
 
     const socket = io();
     let userId = null;
-    const userMarkers = {};
     const userPolylines = {};
+    const userPointMarkers = {};
     const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow'];
 
     socket.on('user_id', (id) => {
@@ -43,10 +43,21 @@
       if (!userPolylines[user_id]) {
         const color = colors[Object.keys(userPolylines).length % colors.length];
         userPolylines[user_id] = L.polyline(path, {color: color}).addTo(map);
-        userMarkers[user_id] = L.marker(path[path.length - 1], {color: color}).addTo(map).bindPopup(`User ${user_id}`);
+        userPointMarkers[user_id] = [];
+        for (let i = 0; i < path.length; i++) {
+          const marker = L.circleMarker(path[i], {color: color, radius: 5}).addTo(map);
+          userPointMarkers[user_id].push(marker);
+        }
       } else {
+        // Remove old point markers
+        userPointMarkers[user_id].forEach(marker => map.removeLayer(marker));
+        userPointMarkers[user_id] = [];
+        // Add new point markers
+        for (let i = 0; i < path.length; i++) {
+          const marker = L.circleMarker(path[i], {color: userPolylines[user_id].options.color, radius: 5}).addTo(map);
+          userPointMarkers[user_id].push(marker);
+        }
         userPolylines[user_id].setLatLngs(path);
-        userMarkers[user_id].setLatLng(path[path.length - 1]);
       }
       if (path.length > 0) {
         map.setView(path[path.length - 1], 16);
@@ -54,9 +65,9 @@
     });
 
     socket.on('user_disconnected', (disconnectedUserId) => {
-      if (userMarkers[disconnectedUserId]) {
-        map.removeLayer(userMarkers[disconnectedUserId]);
-        delete userMarkers[disconnectedUserId];
+      if (userPointMarkers[disconnectedUserId]) {
+        userPointMarkers[disconnectedUserId].forEach(marker => map.removeLayer(marker));
+        delete userPointMarkers[disconnectedUserId];
       }
       if (userPolylines[disconnectedUserId]) {
         map.removeLayer(userPolylines[disconnectedUserId]);
