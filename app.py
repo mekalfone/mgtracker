@@ -2,6 +2,7 @@ import os
 import json
 import uuid
 import logging
+import threading
 from flask import Flask, render_template, request, jsonify
 from flask_socketio import SocketIO, emit
 from dotenv import load_dotenv
@@ -73,7 +74,8 @@ def save_trips(trips_data):
 
 
 trips = load_trips()
-active_users = {}  # {sid: {id, username, trip_id, lat, lng}}
+active_users = {}        # {sid: {id, username, trip_id, lat, lng}}
+_users_lock = threading.Lock()
 
 
 @app.route('/')
@@ -137,46 +139,59 @@ def delete_trip(trip_id):
     return '', 204
 
 
+def _snapshot():
+    with _users_lock:
+        return list(active_users.values())
+
+
 @socketio.on('connect')
 def on_connect():
     logger.info('Client connected: %s', request.sid)
     emit('user_id', {'id': request.sid})
     emit('trips_updated', trips)
-    emit('users_updated', list(active_users.values()))
+    emit('users_updated', _snapshot())
 
 
 @socketio.on('disconnect')
 def on_disconnect():
     sid = request.sid
-    if sid in active_users:
-        del active_users[sid]
-        socketio.emit('users_updated', list(active_users.values()))
+    changed = False
+    with _users_lock:
+        if sid in active_users:
+            del active_users[sid]
+            changed = True
+    if changed:
+        emit('users_updated', _snapshot(), broadcast=True)
     logger.info('Client disconnected: %s', sid)
 
 
 @socketio.on('join_trip')
 def on_join_trip(data):
     sid = request.sid
-    active_users[sid] = {
-        'id': sid,
-        'username': str(data.get('username', 'Anonymous'))[:30],
-        'trip_id': data.get('trip_id'),
-        'lat': None,
-        'lng': None
-    }
-    socketio.emit('users_updated', list(active_users.values()))
+    with _users_lock:
+        active_users[sid] = {
+            'id': sid,
+            'username': str(data.get('username', 'Anonymous'))[:30],
+            'trip_id': data.get('trip_id'),
+            'lat': active_users.get(sid, {}).get('lat'),   # keep last known pos on rejoin
+            'lng': active_users.get(sid, {}).get('lng'),
+        }
+    emit('users_updated', _snapshot(), broadcast=True)
 
 
 @socketio.on('location_update')
 def on_location_update(data):
     sid = request.sid
-    if sid in active_users:
+    with _users_lock:
+        if sid not in active_users:
+            return
         try:
             active_users[sid]['lat'] = float(data['lat'])
             active_users[sid]['lng'] = float(data['lng'])
-            socketio.emit('users_updated', list(active_users.values()))
         except (KeyError, ValueError, TypeError) as e:
             logger.error('Invalid location data from %s: %s', sid, e)
+            return
+    emit('users_updated', _snapshot(), broadcast=True)
 
 
 if __name__ == '__main__':

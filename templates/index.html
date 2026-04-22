@@ -308,9 +308,11 @@
 <script>
 /* ── STATE ───────────────────────────────────────── */
 const YAOUNDE = [3.848, 11.502];
+const SESSION_KEY = 'mg_join';
 
 let map, socket;
-let myId = null;
+let myId      = null;
+let hasJoined = false;   // true once user submits the join form
 let trips = [];
 let users = {};
 let tripGroups = {};   // {trip_id: L.LayerGroup}
@@ -325,7 +327,9 @@ let wpTripId  = null;
 let wpSavedName  = '';
 let wpSavedColor = '#9b59b6';
 
-let autoFollow = true;
+let autoFollow  = true;
+let geoWatchId  = null;
+let geoRetryTid = null;
 
 /* ── MAP ─────────────────────────────────────────── */
 function initMap() {
@@ -340,16 +344,34 @@ function initMap() {
 
 /* ── SOCKET ──────────────────────────────────────── */
 function initSocket() {
-  socket = io();
+  socket = io({ reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: Infinity });
+
   socket.on('connect', () => {
     document.getElementById('statusDot').classList.add('on');
     document.getElementById('statusTxt').textContent = 'Connected';
   });
-  socket.on('disconnect', () => {
+
+  socket.on('disconnect', reason => {
     document.getElementById('statusDot').classList.remove('on');
-    document.getElementById('statusTxt').textContent = 'Disconnected';
+    // 'io server disconnect' = server kicked us intentionally; otherwise we reconnect
+    document.getElementById('statusTxt').textContent =
+      reason === 'io server disconnect' ? 'Disconnected' : 'Reconnecting…';
   });
-  socket.on('user_id', d => { myId = d.id; });
+
+  // user_id arrives on every (re)connect — use it as the trigger to rejoin
+  socket.on('user_id', d => {
+    const prevId = myId;
+    myId = d.id;
+    // If we had already joined before (reconnect scenario), silently rejoin
+    if (hasJoined && prevId !== null) {
+      const saved = sessionStorage.getItem(SESSION_KEY);
+      if (saved) {
+        socket.emit('join_trip', JSON.parse(saved));
+        ensureGeo();
+      }
+    }
+  });
+
   socket.on('trips_updated', data => {
     trips = data;
     renderRoutes();
@@ -357,6 +379,7 @@ function initSocket() {
     renderTripCards();
     if (!document.getElementById('adminOverlay').classList.contains('hidden')) renderAdmList();
   });
+
   socket.on('users_updated', data => {
     users = {};
     data.forEach(u => { users[u.id] = u; });
@@ -467,7 +490,10 @@ function joinTrip() {
   if (!name) { shake(document.getElementById('nameIn')); return; }
   const sel = document.querySelector('.trip-card.sel');
   if (!sel) { alert('Please select a trip.'); return; }
-  socket.emit('join_trip', { username: name, trip_id: sel.dataset.id });
+  const data = { username: name, trip_id: sel.dataset.id };
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
+  hasJoined = true;
+  socket.emit('join_trip', data);
   document.getElementById('joinOverlay').classList.add('hidden');
   autoFollow = true;
   startGeo();
@@ -475,12 +501,28 @@ function joinTrip() {
 
 /* ── GEOLOCATION ─────────────────────────────────── */
 function startGeo() {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.watchPosition(
-    pos => socket.emit('location_update', { lat: pos.coords.latitude, lng: pos.coords.longitude }),
-    err => console.warn('Geo:', err.message),
+  if (!navigator.geolocation || geoWatchId !== null) return;
+  geoWatchId = navigator.geolocation.watchPosition(
+    pos => {
+      socket.emit('location_update', { lat: pos.coords.latitude, lng: pos.coords.longitude });
+    },
+    err => {
+      console.warn('Geo error:', err.message);
+      // Clear and schedule a retry so we don't silently stop sending positions
+      if (geoWatchId !== null) {
+        navigator.geolocation.clearWatch(geoWatchId);
+        geoWatchId = null;
+      }
+      clearTimeout(geoRetryTid);
+      geoRetryTid = setTimeout(startGeo, 8000);
+    },
     { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
   );
+}
+
+// Ensure geo is running (called after reconnect)
+function ensureGeo() {
+  if (geoWatchId === null) startGeo();
 }
 
 /* ── ADMIN PANEL ─────────────────────────────────── */
