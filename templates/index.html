@@ -1,103 +1,672 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Realtime Location Tracker</title>
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet/dist/leaflet.css"
-  />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MG Tracker — Yaoundé</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
-    html, body, #map{
-      height: 100%;
-      margin: 0;
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --sidebar: 290px;
+      --hh: 54px;
+      --dark: #0f172a;
+      --card: #1e293b;
+      --border: #334155;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --success: #22c55e;
     }
+
+    html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); }
+
+    /* ── HEADER ─────────────────────────── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--hh);
+      background: var(--dark); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 18px; gap: 10px; z-index: 1000;
+    }
+    .logo { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
+    .logo em { color: var(--accent); font-style: normal; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; transition: background 0.3s; }
+    .dot.on { background: var(--success); }
+    #statusTxt { font-size: 12px; color: var(--muted); }
+    #countTxt  { font-size: 12px; color: var(--muted); margin-left: auto; }
+
+    /* ── LAYOUT ─────────────────────────── */
+    .app { display: flex; height: calc(100vh - var(--hh)); margin-top: var(--hh); }
+
+    /* ── SIDEBAR ────────────────────────── */
+    .sidebar {
+      width: var(--sidebar); flex-shrink: 0;
+      background: var(--dark); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sb-body { flex: 1; overflow-y: auto; padding: 14px; }
+    .sb-foot { padding: 14px; border-top: 1px solid var(--border); }
+    .sb-section { margin-bottom: 22px; }
+    .sb-title {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.2px; color: var(--muted); margin-bottom: 8px;
+    }
+
+    /* Trip rows */
+    .trip-row {
+      display: flex; align-items: center; gap: 9px;
+      padding: 9px 11px; border-radius: 8px; background: var(--card);
+      margin-bottom: 6px;
+    }
+    .trip-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .trip-label { flex: 1; font-size: 13px; color: var(--text); font-weight: 500;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .trip-badge {
+      font-size: 11px; color: var(--muted); background: var(--border);
+      border-radius: 10px; padding: 1px 7px; flex-shrink: 0;
+    }
+
+    /* User rows */
+    .user-row {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 10px; border-radius: 8px; background: var(--card);
+      margin-bottom: 5px;
+    }
+    .user-av {
+      width: 26px; height: 26px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name { font-size: 12px; color: var(--text); font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-sub  { font-size: 11px; color: var(--muted);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .loc-on  { font-size: 11px; color: var(--success); flex-shrink: 0; }
+    .loc-off { font-size: 11px; color: var(--border);  flex-shrink: 0; }
+
+    .empty { font-size: 12px; color: var(--muted); text-align: center; padding: 14px 0; }
+
+    /* ── MAP ─────────────────────────────── */
+    #map { flex: 1; z-index: 1; }
+
+    /* ── BUTTONS ─────────────────────────── */
+    .btn {
+      padding: 9px 14px; border-radius: 8px; border: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; transition: background 0.15s, color 0.15s;
+      display: inline-flex; align-items: center; gap: 5px;
+    }
+    .btn-primary   { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-ghost     { background: var(--card); color: var(--text); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+    .btn-danger    { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-sm  { padding: 5px 9px; font-size: 11px; border-radius: 6px; }
+    .btn-ico { padding: 5px 7px; font-size: 13px; }
+    .btn-full { width: 100%; justify-content: center; }
+
+    /* ── MODALS ──────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2000; backdrop-filter: blur(5px);
+    }
+    .overlay.hidden { display: none; }
+    .modal {
+      background: var(--dark); border: 1px solid var(--border); border-radius: 16px;
+      padding: 28px 30px; width: 460px; max-width: calc(100vw - 28px);
+      max-height: calc(100vh - 60px); overflow-y: auto;
+    }
+    .modal-lg { width: 620px; }
+    .modal h2 { font-size: 19px; color: var(--text); margin-bottom: 5px; }
+    .modal .sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+    .modal-hdr { display: flex; align-items: center; margin-bottom: 20px; }
+    .modal-hdr h2 { flex: 1; margin: 0; }
+
+    /* form */
+    .fg { margin-bottom: 14px; }
+    .fg label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .5px; color: var(--muted); margin-bottom: 5px; }
+    .fg input[type=text], .fg input[type=color] {
+      width: 100%; padding: 9px 11px; border-radius: 7px;
+      background: var(--card); border: 1px solid var(--border);
+      color: var(--text); font-size: 13px; outline: none; transition: border-color 0.15s;
+    }
+    .fg input:focus { border-color: var(--accent); }
+    .fg input[type=color] { height: 40px; padding: 3px 7px; cursor: pointer; }
+    .fg-row { display: flex; gap: 10px; }
+    .fg-row .fg { flex: 1; }
+
+    hr.div { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
+
+    /* trip cards for join modal */
+    .trip-cards { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
+    .trip-card {
+      padding: 13px 14px; border-radius: 9px; border: 2px solid var(--border);
+      cursor: pointer; display: flex; align-items: center; gap: 11px;
+      transition: border-color 0.15s, background 0.15s; background: var(--card);
+    }
+    .trip-card:hover { border-color: var(--accent); }
+    .trip-card.sel { border-color: var(--accent); background: rgba(59,130,246,.12); }
+    .tc-dot  { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+    .tc-name { flex: 1; font-size: 13px; color: var(--text); font-weight: 500; }
+    .tc-chk  { color: var(--accent); display: none; font-size: 16px; }
+    .trip-card.sel .tc-chk { display: block; }
+
+    /* admin trip rows */
+    .adm-row {
+      display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+      border-radius: 8px; background: var(--card); margin-bottom: 7px;
+    }
+    .adm-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+    .adm-name { flex: 1; font-size: 13px; color: var(--text); font-weight: 500; }
+    .adm-wp { font-size: 11px; color: var(--muted); margin-right: 4px; }
+
+    /* waypoint editor */
+    .wp-box {
+      border: 1px solid var(--border); border-radius: 7px;
+      padding: 11px; background: var(--card);
+    }
+    .wp-hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+    .wp-list { max-height: 130px; overflow-y: auto; }
+    .wp-item { display: flex; align-items: center; gap: 6px; padding: 3px 0;
+      font-size: 12px; color: var(--muted); }
+    .wp-item span { flex: 1; }
+    .wp-del { background: none; border: none; color: var(--danger); cursor: pointer;
+      font-size: 13px; padding: 0 3px; line-height: 1; }
+    .wp-acts { display: flex; gap: 7px; margin-top: 8px; }
+
+    /* waypoint toolbar on map */
+    #wpBar {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: var(--dark); border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px 18px; display: none; align-items: center; gap: 12px;
+      z-index: 1500; box-shadow: 0 4px 24px rgba(0,0,0,.5);
+      font-size: 13px; color: var(--text); white-space: nowrap;
+    }
+    #wpBar.show { display: flex; }
+    #wpBarInfo { color: var(--muted); font-size: 12px; }
+
+    /* Leaflet tooltip tweak */
+    .leaflet-tooltip { background: #1e293b; border: 1px solid #334155; color: #f1f5f9;
+      font-size: 12px; border-radius: 6px; }
+    .leaflet-tooltip-top::before { border-top-color: #334155; }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
   </style>
 </head>
 <body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo">MG<em>Tracker</em></div>
+  <span id="statusTxt">Connecting…</span>
+  <div class="dot" id="statusDot"></div>
+  <span id="countTxt"></span>
+</header>
+
+<!-- APP -->
+<div class="app">
+  <div class="sidebar">
+    <div class="sb-body">
+      <div class="sb-section">
+        <div class="sb-title">Trip Routes</div>
+        <div id="sbTrips"><div class="empty">Loading…</div></div>
+      </div>
+      <div class="sb-section">
+        <div class="sb-title">Online Users</div>
+        <div id="sbUsers"><div class="empty">No users online</div></div>
+      </div>
+    </div>
+    <div class="sb-foot">
+      <button class="btn btn-ghost btn-full" onclick="openAdmin()">⚙ Manage Trips</button>
+    </div>
+  </div>
   <div id="map"></div>
+</div>
 
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-  <script>
-    const map = L.map('map').setView([0, 0], 13);
+<!-- WAYPOINT TOOLBAR (shown on map during edit) -->
+<div id="wpBar">
+  <span>📍 Click map to add waypoints · Right-click marker to remove</span>
+  <span id="wpBarInfo"></span>
+  <button class="btn btn-primary btn-sm" onclick="doneWpEdit()">✓ Done</button>
+  <button class="btn btn-ghost btn-sm" onclick="cancelWpEdit()">✕ Cancel</button>
+</div>
 
-    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap contributors - Mekalfone Group - TeamX'
-    }).addTo(map);
+<!-- JOIN MODAL -->
+<div id="joinOverlay" class="overlay">
+  <div class="modal">
+    <h2>Welcome to MG Tracker</h2>
+    <p class="sub">Enter your name and select a trip. Your real-time position will appear on the map.</p>
 
-    const socket = io();
-    let userId = null;
-    const userPolylines = {};
-    const userPointMarkers = {};
-    const colors = ['red', 'blue', 'green', 'orange', 'purple', 'yellow'];
+    <div class="fg">
+      <label>Your Name</label>
+      <input type="text" id="nameIn" placeholder="e.g. Jean-Paul" maxlength="30"/>
+    </div>
+    <div class="fg">
+      <label>Select a Trip</label>
+      <div id="tripCards" class="trip-cards"><div class="empty">Loading trips…</div></div>
+    </div>
+    <button class="btn btn-primary btn-full" onclick="joinTrip()">Join Trip →</button>
+  </div>
+</div>
 
-    socket.on('user_id', (id) => {
-      userId = id;
-    });
+<!-- ADMIN MODAL -->
+<div id="adminOverlay" class="overlay hidden">
+  <div class="modal modal-lg">
+    <div class="modal-hdr">
+      <h2>Manage Trips</h2>
+      <button class="btn btn-ghost btn-sm" onclick="closeAdmin()">✕ Close</button>
+    </div>
 
-    socket.on('update_user_path', (data) => {
-      const { user_id, path } = data;
-      if (!userPolylines[user_id]) {
-        const color = colors[Object.keys(userPolylines).length % colors.length];
-        userPolylines[user_id] = L.polyline(path, {color: color}).addTo(map);
-        userPointMarkers[user_id] = [];
-        for (let i = 0; i < path.length; i++) {
-          const marker = L.circleMarker(path[i], {color: color, radius: 5}).addTo(map);
-          userPointMarkers[user_id].push(marker);
-        }
-      } else {
-        // Remove old point markers
-        userPointMarkers[user_id].forEach(marker => map.removeLayer(marker));
-        userPointMarkers[user_id] = [];
-        // Add new point markers
-        for (let i = 0; i < path.length; i++) {
-          const marker = L.circleMarker(path[i], {color: userPolylines[user_id].options.color, radius: 5}).addTo(map);
-          userPointMarkers[user_id].push(marker);
-        }
-        userPolylines[user_id].setLatLngs(path);
-      }
-      if (path.length > 0) {
-        map.setView(path[path.length - 1], 16);
-      }
-    });
+    <div id="admList"></div>
 
-    socket.on('user_disconnected', (disconnectedUserId) => {
-      if (userPointMarkers[disconnectedUserId]) {
-        userPointMarkers[disconnectedUserId].forEach(marker => map.removeLayer(marker));
-        delete userPointMarkers[disconnectedUserId];
-      }
-      if (userPolylines[disconnectedUserId]) {
-        map.removeLayer(userPolylines[disconnectedUserId]);
-        delete userPolylines[disconnectedUserId];
-      }
-    });
+    <hr class="div"/>
 
-    function sendLocation(lat, lng) {
-      socket.emit('location_update', { lat, lng });
-    }
+    <div id="admForm">
+      <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px" id="formTitle">Add New Trip</p>
 
-    function onSuccess(position) {
-      const lat = position.coords.latitude;
-      const lng = position.coords.longitude;
-      sendLocation(lat, lng);
-    }
+      <div class="fg-row">
+        <div class="fg" style="flex:2">
+          <label>Trip Name</label>
+          <input type="text" id="tNameIn" placeholder="e.g. Bastos → Mvan" maxlength="60"/>
+        </div>
+        <div class="fg">
+          <label>Color</label>
+          <input type="color" id="tColorIn" value="#9b59b6"/>
+        </div>
+      </div>
 
-    function onError(error) {
-      console.error('Location error:', error.message);
-    }
+      <div class="fg">
+        <label>Route Waypoints</label>
+        <div class="wp-box">
+          <div class="wp-hint" id="wpHint">Click "Edit on Map" to draw the route by clicking on the map.</div>
+          <div class="wp-list" id="wpList"></div>
+          <div class="wp-acts">
+            <button class="btn btn-ghost btn-sm" onclick="startWpEdit()">📍 Edit on Map</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearWaypoints()">✕ Clear</button>
+          </div>
+        </div>
+      </div>
 
-    if ('geolocation' in navigator) {
-      navigator.geolocation.watchPosition(onSuccess, onError, {
-        enableHighAccuracy: true,
-        maximumAge: 0,
-        timeout: 10000
-      });
+      <div style="display:flex;gap:9px;margin-top:4px">
+        <button class="btn btn-primary" id="saveTripBtn" onclick="saveTrip()">Save Trip</button>
+        <button class="btn btn-ghost" onclick="resetForm()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEAFLET + SOCKET.IO -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+
+<script>
+/* ── STATE ───────────────────────────────────────── */
+const YAOUNDE = [3.848, 11.502];
+
+let map, socket;
+let myId = null;
+let trips = [];
+let users = {};
+let tripGroups = {};   // {trip_id: L.LayerGroup}
+let userMarkers = {};  // {sid: L.CircleMarker}
+
+// waypoint editor
+let wpActive  = false;
+let wpPoints  = [];
+let wpMarkers = [];
+let wpPreview = null;
+let wpTripId  = null;
+let wpSavedName  = '';
+let wpSavedColor = '#9b59b6';
+
+let autoFollow = true;
+
+/* ── MAP ─────────────────────────────────────────── */
+function initMap() {
+  map = L.map('map').setView(YAOUNDE, 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Mekalfone Group',
+    maxZoom: 19
+  }).addTo(map);
+  map.on('click', e => { if (wpActive) addWpPoint(e.latlng.lat, e.latlng.lng); });
+  map.on('movestart', () => { autoFollow = false; });
+}
+
+/* ── SOCKET ──────────────────────────────────────── */
+function initSocket() {
+  socket = io();
+  socket.on('connect', () => {
+    document.getElementById('statusDot').classList.add('on');
+    document.getElementById('statusTxt').textContent = 'Connected';
+  });
+  socket.on('disconnect', () => {
+    document.getElementById('statusDot').classList.remove('on');
+    document.getElementById('statusTxt').textContent = 'Disconnected';
+  });
+  socket.on('user_id', d => { myId = d.id; });
+  socket.on('trips_updated', data => {
+    trips = data;
+    renderRoutes();
+    renderSbTrips();
+    renderTripCards();
+    if (!document.getElementById('adminOverlay').classList.contains('hidden')) renderAdmList();
+  });
+  socket.on('users_updated', data => {
+    users = {};
+    data.forEach(u => { users[u.id] = u; });
+    renderUserMarkers();
+    renderSbUsers();
+    const n = data.length;
+    document.getElementById('countTxt').textContent = n ? `${n} online` : '';
+  });
+}
+
+/* ── TRIP ROUTES ─────────────────────────────────── */
+function renderRoutes() {
+  Object.values(tripGroups).forEach(g => map.removeLayer(g));
+  tripGroups = {};
+  trips.forEach(trip => {
+    const wps = trip.waypoints;
+    if (!wps || wps.length < 2) return;
+    const g = L.layerGroup().addTo(map);
+    L.polyline(wps, { color: trip.color, weight: 5, opacity: 0.85, lineJoin: 'round' })
+      .bindTooltip(trip.name, { sticky: true }).addTo(g);
+    L.circleMarker(wps[0], { radius: 7, fillColor: '#fff', color: trip.color, weight: 3, fillOpacity: 1 })
+      .bindPopup(`<b>Départ&nbsp;:</b> ${esc(trip.name)}`).addTo(g);
+    L.circleMarker(wps[wps.length - 1], { radius: 7, fillColor: trip.color, color: '#fff', weight: 2, fillOpacity: 1 })
+      .bindPopup(`<b>Arrivée&nbsp;:</b> ${esc(trip.name)}`).addTo(g);
+    tripGroups[trip.id] = g;
+  });
+}
+
+/* ── USER MARKERS ────────────────────────────────── */
+function renderUserMarkers() {
+  const alive = new Set(Object.keys(users));
+  Object.keys(userMarkers).forEach(sid => {
+    if (!alive.has(sid)) { map.removeLayer(userMarkers[sid]); delete userMarkers[sid]; }
+  });
+  Object.values(users).forEach(u => {
+    if (u.lat === null || u.lng === null) return;
+    const trip  = trips.find(t => t.id === u.trip_id);
+    const color = trip ? trip.color : '#64748b';
+    const isMe  = u.id === myId;
+    const pos   = [u.lat, u.lng];
+    if (userMarkers[u.id]) {
+      userMarkers[u.id].setLatLng(pos);
     } else {
-      alert('Geolocation is not supported in this browser.');
+      const m = L.circleMarker(pos, {
+        radius: isMe ? 11 : 8,
+        fillColor: color, color: '#fff',
+        weight: isMe ? 3 : 2, opacity: 1, fillOpacity: isMe ? 1 : 0.85
+      }).addTo(map);
+      m.bindTooltip(isMe ? `${esc(u.username)} (you)` : esc(u.username), { direction: 'top' });
+      userMarkers[u.id] = m;
     }
-  </script>
+    if (isMe && autoFollow) map.setView(pos, Math.max(map.getZoom(), 15));
+  });
+}
+
+/* ── SIDEBAR ─────────────────────────────────────── */
+function renderSbTrips() {
+  const el = document.getElementById('sbTrips');
+  if (!trips.length) { el.innerHTML = '<div class="empty">No trips defined</div>'; return; }
+  el.innerHTML = trips.map(t => {
+    const cnt = Object.values(users).filter(u => u.trip_id === t.id).length;
+    return `<div class="trip-row">
+      <div class="trip-dot" style="background:${t.color}"></div>
+      <span class="trip-label" title="${esc(t.name)}">${esc(t.name)}</span>
+      ${cnt ? `<span class="trip-badge">${cnt}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderSbUsers() {
+  const el = document.getElementById('sbUsers');
+  const list = Object.values(users);
+  if (!list.length) { el.innerHTML = '<div class="empty">No users online</div>'; return; }
+  el.innerHTML = list.map(u => {
+    const trip  = trips.find(t => t.id === u.trip_id);
+    const color = trip ? trip.color : '#64748b';
+    const init  = (u.username || '?').charAt(0).toUpperCase();
+    return `<div class="user-row">
+      <div class="user-av" style="background:${color}">${init}</div>
+      <div class="user-info">
+        <div class="user-name">${esc(u.username)}${u.id === myId ? ' <span style="color:var(--muted);font-weight:400">(you)</span>' : ''}</div>
+        <div class="user-sub">${trip ? esc(trip.name) : 'No trip'}</div>
+      </div>
+      <span class="${u.lat !== null ? 'loc-on' : 'loc-off'}">●</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── JOIN MODAL ──────────────────────────────────── */
+function renderTripCards() {
+  const el = document.getElementById('tripCards');
+  if (!trips.length) { el.innerHTML = '<div class="empty">No trips available</div>'; return; }
+  el.innerHTML = trips.map((t, i) => `
+    <div class="trip-card ${i === 0 ? 'sel' : ''}" data-id="${t.id}" onclick="pickCard(this)">
+      <div class="tc-dot" style="background:${t.color}"></div>
+      <span class="tc-name">${esc(t.name)}</span>
+      <span class="tc-chk">✓</span>
+    </div>`).join('');
+}
+
+function pickCard(el) {
+  document.querySelectorAll('.trip-card').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+function joinTrip() {
+  const name = document.getElementById('nameIn').value.trim();
+  if (!name) { shake(document.getElementById('nameIn')); return; }
+  const sel = document.querySelector('.trip-card.sel');
+  if (!sel) { alert('Please select a trip.'); return; }
+  socket.emit('join_trip', { username: name, trip_id: sel.dataset.id });
+  document.getElementById('joinOverlay').classList.add('hidden');
+  autoFollow = true;
+  startGeo();
+}
+
+/* ── GEOLOCATION ─────────────────────────────────── */
+function startGeo() {
+  if (!navigator.geolocation) return;
+  navigator.geolocation.watchPosition(
+    pos => socket.emit('location_update', { lat: pos.coords.latitude, lng: pos.coords.longitude }),
+    err => console.warn('Geo:', err.message),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+  );
+}
+
+/* ── ADMIN PANEL ─────────────────────────────────── */
+function openAdmin() { renderAdmList(); resetForm(); document.getElementById('adminOverlay').classList.remove('hidden'); }
+function closeAdmin() { if (wpActive) cancelWpEdit(); document.getElementById('adminOverlay').classList.add('hidden'); }
+
+function renderAdmList() {
+  const el = document.getElementById('admList');
+  if (!trips.length) { el.innerHTML = '<div class="empty" style="margin-bottom:10px">No trips yet</div>'; return; }
+  el.innerHTML = trips.map(t => `
+    <div class="adm-row">
+      <div class="adm-dot" style="background:${t.color}"></div>
+      <span class="adm-name">${esc(t.name)}</span>
+      <span class="adm-wp">${t.waypoints.length} pts</span>
+      <button class="btn btn-ghost btn-sm btn-ico" onclick="editTrip('${t.id}')" title="Edit">✏</button>
+      <button class="btn btn-danger btn-sm btn-ico" onclick="delTrip('${t.id}')" title="Delete">🗑</button>
+    </div>`).join('');
+}
+
+function editTrip(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t) return;
+  wpTripId = id;
+  document.getElementById('formTitle').textContent = 'Edit Trip';
+  document.getElementById('tNameIn').value = t.name;
+  document.getElementById('tColorIn').value = t.color;
+  document.getElementById('saveTripBtn').textContent = 'Update Trip';
+  wpPoints = t.waypoints.map(p => [...p]);
+  renderWpList();
+}
+
+function resetForm() {
+  wpTripId = null;
+  document.getElementById('formTitle').textContent = 'Add New Trip';
+  document.getElementById('tNameIn').value = '';
+  document.getElementById('tColorIn').value = '#9b59b6';
+  document.getElementById('saveTripBtn').textContent = 'Save Trip';
+  wpPoints = [];
+  renderWpList();
+  document.getElementById('wpHint').textContent = 'Click "Edit on Map" to draw the route by clicking on the map.';
+}
+
+async function saveTrip() {
+  const name  = document.getElementById('tNameIn').value.trim();
+  const color = document.getElementById('tColorIn').value;
+  if (!name) { shake(document.getElementById('tNameIn')); return; }
+  if (wpPoints.length < 2) { alert('Add at least 2 waypoints to define the route.'); return; }
+  const body   = { name, color, waypoints: wpPoints };
+  const url    = wpTripId ? `/api/trips/${wpTripId}` : '/api/trips';
+  const method = wpTripId ? 'PUT' : 'POST';
+  try {
+    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    if (res.ok) { resetForm(); renderAdmList(); }
+    else alert('Failed to save trip.');
+  } catch { alert('Network error.'); }
+}
+
+async function delTrip(id) {
+  if (!confirm('Delete this trip? Users on it will lose their route.')) return;
+  try {
+    const res = await fetch(`/api/trips/${id}`, { method: 'DELETE' });
+    if (res.ok) renderAdmList();
+  } catch { alert('Network error.'); }
+}
+
+/* ── WAYPOINT EDITOR ─────────────────────────────── */
+function startWpEdit() {
+  wpSavedName  = document.getElementById('tNameIn').value;
+  wpSavedColor = document.getElementById('tColorIn').value;
+  document.getElementById('adminOverlay').classList.add('hidden');
+  wpActive = true;
+  document.getElementById('wpBar').classList.add('show');
+  updateWpBar();
+  clearWpMapMarkers();
+  wpPoints.forEach((p, i) => placeWpMarker(p[0], p[1], i));
+  drawWpPreview();
+}
+
+function doneWpEdit() {
+  wpActive = false;
+  document.getElementById('wpBar').classList.remove('show');
+  clearWpMapMarkers();
+  renderWpList();
+  document.getElementById('wpHint').textContent =
+    wpPoints.length ? `${wpPoints.length} waypoint${wpPoints.length > 1 ? 's' : ''} defined. Click "Edit on Map" to modify.`
+                    : 'Click "Edit on Map" to draw the route by clicking on the map.';
+  document.getElementById('adminOverlay').classList.remove('hidden');
+}
+
+function cancelWpEdit() {
+  wpActive = false;
+  document.getElementById('wpBar').classList.remove('show');
+  clearWpMapMarkers();
+  document.getElementById('tNameIn').value  = wpSavedName;
+  document.getElementById('tColorIn').value = wpSavedColor;
+  document.getElementById('adminOverlay').classList.remove('hidden');
+}
+
+function addWpPoint(lat, lng) {
+  wpPoints.push([lat, lng]);
+  placeWpMarker(lat, lng, wpPoints.length - 1);
+  drawWpPreview();
+  updateWpBar();
+}
+
+function placeWpMarker(lat, lng, idx) {
+  const color = document.getElementById('tColorIn').value;
+  const m = L.circleMarker([lat, lng], {
+    radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1
+  }).addTo(map);
+  m.bindTooltip(`Point ${idx + 1}`, { direction: 'top' });
+  m.on('contextmenu', () => {
+    const i = wpMarkers.indexOf(m);
+    if (i === -1) return;
+    map.removeLayer(m);
+    wpMarkers.splice(i, 1);
+    wpPoints.splice(i, 1);
+    wpMarkers.forEach((mk, j) => mk.setTooltipContent(`Point ${j + 1}`));
+    drawWpPreview();
+    updateWpBar();
+  });
+  wpMarkers.push(m);
+}
+
+function drawWpPreview() {
+  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
+  if (wpPoints.length >= 2) {
+    const color = document.getElementById('tColorIn').value;
+    wpPreview = L.polyline(wpPoints, { color, weight: 4, opacity: 0.7, dashArray: '8 5' }).addTo(map);
+  }
+}
+
+function clearWpMapMarkers() {
+  wpMarkers.forEach(m => map.removeLayer(m));
+  wpMarkers = [];
+  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
+}
+
+function clearWaypoints() {
+  wpPoints = [];
+  clearWpMapMarkers();
+  renderWpList();
+}
+
+function renderWpList() {
+  const el = document.getElementById('wpList');
+  if (!wpPoints.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">No waypoints yet</div>';
+    return;
+  }
+  el.innerHTML = wpPoints.map((p, i) => `
+    <div class="wp-item">
+      <span>📍 ${i + 1}: ${p[0].toFixed(5)}, ${p[1].toFixed(5)}</span>
+      <button class="wp-del" onclick="removeWpIdx(${i})">✕</button>
+    </div>`).join('');
+}
+
+function removeWpIdx(i) {
+  wpPoints.splice(i, 1);
+  if (wpActive) {
+    clearWpMapMarkers();
+    wpPoints.forEach((p, j) => placeWpMarker(p[0], p[1], j));
+    drawWpPreview();
+    updateWpBar();
+  }
+  renderWpList();
+}
+
+function updateWpBar() {
+  document.getElementById('wpBarInfo').textContent =
+    wpPoints.length ? `${wpPoints.length} point${wpPoints.length > 1 ? 's' : ''}` : '';
+}
+
+/* ── HELPERS ─────────────────────────────────────── */
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+}
+function shake(el) {
+  el.style.borderColor = 'var(--danger)';
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ''; }, 2000);
+}
+
+/* ── BOOT ────────────────────────────────────────── */
+window.addEventListener('DOMContentLoaded', () => { initMap(); initSocket(); });
+</script>
 </body>
 </html>
