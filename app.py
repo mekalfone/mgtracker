@@ -80,7 +80,10 @@ _users_lock = threading.Lock()
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    resp = app.make_response(render_template('index.html'))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
+    resp.headers['Pragma'] = 'no-cache'
+    return resp
 
 
 @app.route('/health')

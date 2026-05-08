@@ -1,637 +1,1164 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MG Tracker — Yaoundé</title>
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MG Tracker – Suivi de bus en temps réel</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚌</text></svg>" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+    /* ── Variables ───────────────────────────────── */
     :root {
-      --sidebar: 290px;
-      --hh: 54px;
-      --dark: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --text: #f1f5f9;
-      --muted: #94a3b8;
-      --accent: #3b82f6;
-      --danger: #ef4444;
-      --success: #22c55e;
+      --primary:       #1d4ed8;
+      --primary-dark:  #1e3a8a;
+      --primary-light: #dbeafe;
+      --amber:         #f59e0b;
+      --success:       #10b981;
+      --danger:        #ef4444;
+      --bg:            #f0f4ff;
+      --card:          #ffffff;
+      --sidebar-bg:    #ffffff;
+      --text:          #111827;
+      --muted:         #6b7280;
+      --border:        #e5e7eb;
+      --shadow:        0 1px 4px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-lg:     0 10px 24px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+      --radius:        12px;
+      --radius-sm:     8px;
+      --hh:            62px;
+      --sw:            380px;
+      --ease:          .2s ease;
     }
 
-    html, body { height: 100%; overflow: hidden; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--dark); }
-
-    /* ── HEADER ─────────────────────────── */
-    header {
-      position: fixed; top: 0; left: 0; right: 0; height: var(--hh);
-      background: var(--dark); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; padding: 0 18px; gap: 10px; z-index: 1000;
-    }
-    .logo { font-size: 17px; font-weight: 700; color: var(--text); letter-spacing: -0.3px; }
-    .logo em { color: var(--accent); font-style: normal; }
-    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; transition: background 0.3s; }
-    .dot.on { background: var(--success); }
-    #statusTxt { font-size: 12px; color: var(--muted); }
-    #countTxt  { font-size: 12px; color: var(--muted); margin-left: auto; }
-
-    /* ── LAYOUT ─────────────────────────── */
-    .app { display: flex; height: calc(100vh - var(--hh)); margin-top: var(--hh); }
-
-    /* ── SIDEBAR ────────────────────────── */
-    .sidebar {
-      width: var(--sidebar); flex-shrink: 0;
-      background: var(--dark); border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; overflow: hidden;
-    }
-    .sb-body { flex: 1; overflow-y: auto; padding: 14px; }
-    .sb-foot { padding: 14px; border-top: 1px solid var(--border); }
-    .sb-section { margin-bottom: 22px; }
-    .sb-title {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 1.2px; color: var(--muted); margin-bottom: 8px;
-    }
-
-    /* Trip rows */
-    .trip-row {
-      display: flex; align-items: center; gap: 9px;
-      padding: 9px 11px; border-radius: 8px; background: var(--card);
-      margin-bottom: 6px;
-    }
-    .trip-dot { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
-    .trip-label { flex: 1; font-size: 13px; color: var(--text); font-weight: 500;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .trip-badge {
-      font-size: 11px; color: var(--muted); background: var(--border);
-      border-radius: 10px; padding: 1px 7px; flex-shrink: 0;
-    }
-
-    /* User rows */
-    .user-row {
-      display: flex; align-items: center; gap: 8px;
-      padding: 8px 10px; border-radius: 8px; background: var(--card);
-      margin-bottom: 5px;
-    }
-    .user-av {
-      width: 26px; height: 26px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
-    }
-    .user-info { flex: 1; min-width: 0; }
-    .user-name { font-size: 12px; color: var(--text); font-weight: 600;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-sub  { font-size: 11px; color: var(--muted);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .loc-on  { font-size: 11px; color: var(--success); flex-shrink: 0; }
-    .loc-off { font-size: 11px; color: var(--border);  flex-shrink: 0; }
-
-    .empty { font-size: 12px; color: var(--muted); text-align: center; padding: 14px 0; }
-
-    /* ── MAP ─────────────────────────────── */
-    #map { flex: 1; z-index: 1; }
-
-    /* ── BUTTONS ─────────────────────────── */
-    .btn {
-      padding: 9px 14px; border-radius: 8px; border: none; cursor: pointer;
-      font-size: 13px; font-weight: 600; transition: background 0.15s, color 0.15s;
-      display: inline-flex; align-items: center; gap: 5px;
-    }
-    .btn-primary   { background: var(--accent); color: #fff; }
-    .btn-primary:hover { background: #2563eb; }
-    .btn-ghost     { background: var(--card); color: var(--text); border: 1px solid var(--border); }
-    .btn-ghost:hover { background: var(--border); }
-    .btn-danger    { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
-    .btn-danger:hover { background: var(--danger); color: #fff; }
-    .btn-sm  { padding: 5px 9px; font-size: 11px; border-radius: 6px; }
-    .btn-ico { padding: 5px 7px; font-size: 13px; }
-    .btn-full { width: 100%; justify-content: center; }
-
-    /* ── MODALS ──────────────────────────── */
-    .overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.65);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 2000; backdrop-filter: blur(5px);
-    }
-    .overlay.hidden { display: none; }
-    .modal {
-      background: var(--dark); border: 1px solid var(--border); border-radius: 16px;
-      padding: 28px 30px; width: 460px; max-width: calc(100vw - 28px);
-      max-height: calc(100vh - 60px); overflow-y: auto;
-    }
-    .modal-lg { width: 620px; }
-    .modal h2 { font-size: 19px; color: var(--text); margin-bottom: 5px; }
-    .modal .sub { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
-    .modal-hdr { display: flex; align-items: center; margin-bottom: 20px; }
-    .modal-hdr h2 { flex: 1; margin: 0; }
-
-    /* form */
-    .fg { margin-bottom: 14px; }
-    .fg label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .5px; color: var(--muted); margin-bottom: 5px; }
-    .fg input[type=text], .fg input[type=color] {
-      width: 100%; padding: 9px 11px; border-radius: 7px;
-      background: var(--card); border: 1px solid var(--border);
-      color: var(--text); font-size: 13px; outline: none; transition: border-color 0.15s;
-    }
-    .fg input:focus { border-color: var(--accent); }
-    .fg input[type=color] { height: 40px; padding: 3px 7px; cursor: pointer; }
-    .fg-row { display: flex; gap: 10px; }
-    .fg-row .fg { flex: 1; }
-
-    hr.div { border: none; border-top: 1px solid var(--border); margin: 18px 0; }
-
-    /* trip cards for join modal */
-    .trip-cards { display: flex; flex-direction: column; gap: 7px; margin-bottom: 18px; }
-    .trip-card {
-      padding: 13px 14px; border-radius: 9px; border: 2px solid var(--border);
-      cursor: pointer; display: flex; align-items: center; gap: 11px;
-      transition: border-color 0.15s, background 0.15s; background: var(--card);
-    }
-    .trip-card:hover { border-color: var(--accent); }
-    .trip-card.sel { border-color: var(--accent); background: rgba(59,130,246,.12); }
-    .tc-dot  { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
-    .tc-name { flex: 1; font-size: 13px; color: var(--text); font-weight: 500; }
-    .tc-chk  { color: var(--accent); display: none; font-size: 16px; }
-    .trip-card.sel .tc-chk { display: block; }
-
-    /* admin trip rows */
-    .adm-row {
-      display: flex; align-items: center; gap: 8px; padding: 10px 12px;
-      border-radius: 8px; background: var(--card); margin-bottom: 7px;
-    }
-    .adm-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
-    .adm-name { flex: 1; font-size: 13px; color: var(--text); font-weight: 500; }
-    .adm-wp { font-size: 11px; color: var(--muted); margin-right: 4px; }
-
-    /* waypoint editor */
-    .wp-box {
-      border: 1px solid var(--border); border-radius: 7px;
-      padding: 11px; background: var(--card);
-    }
-    .wp-hint { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-    .wp-list { max-height: 130px; overflow-y: auto; }
-    .wp-item { display: flex; align-items: center; gap: 6px; padding: 3px 0;
-      font-size: 12px; color: var(--muted); }
-    .wp-item span { flex: 1; }
-    .wp-del { background: none; border: none; color: var(--danger); cursor: pointer;
-      font-size: 13px; padding: 0 3px; line-height: 1; }
-    .wp-acts { display: flex; gap: 7px; margin-top: 8px; }
-
-    /* waypoint toolbar on map */
-    #wpBar {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      background: var(--dark); border: 1px solid var(--border); border-radius: 12px;
-      padding: 11px 18px; display: none; align-items: center; gap: 12px;
-      z-index: 1500; box-shadow: 0 4px 24px rgba(0,0,0,.5);
-      font-size: 13px; color: var(--text); white-space: nowrap;
-    }
-    #wpBar.show { display: flex; }
-    #wpBarInfo { color: var(--muted); font-size: 12px; }
-
-    /* Leaflet tooltip tweak */
-    .leaflet-tooltip { background: #1e293b; border: 1px solid #334155; color: #f1f5f9;
-      font-size: 12px; border-radius: 6px; }
-    .leaflet-tooltip-top::before { border-top-color: #334155; }
-
+    /* ── Reset ───────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--bg); overflow: hidden; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input, select, textarea { font: inherit; }
+    a { text-decoration: none; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+
+    /* ── App Shell ───────────────────────────────── */
+    .app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* ── Header ──────────────────────────────────── */
+    .hdr {
+      height: var(--hh);
+      background: var(--primary-dark);
+      display: flex; align-items: center; gap: 14px; padding: 0 20px;
+      flex-shrink: 0; z-index: 200;
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+    }
+    .hdr-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .hdr-logo-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 20px;
+    }
+    .hdr-logo-text { line-height: 1; }
+    .hdr-logo-title { font-size: 16px; font-weight: 700; color: #fff; }
+    .hdr-logo-sub   { font-size: 10px; color: rgba(255,255,255,.55); margin-top: 2px; }
+
+    .hdr-search {
+      flex: 1; max-width: 380px; position: relative;
+    }
+    .hdr-search svg {
+      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,.45); pointer-events: none;
+    }
+    .hdr-search input {
+      width: 100%; padding: 8px 14px 8px 38px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 24px; color: #fff; font-size: 13px; outline: none; transition: var(--ease);
+    }
+    .hdr-search input::placeholder { color: rgba(255,255,255,.45); }
+    .hdr-search input:focus { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.4); }
+
+    .hdr-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+
+    .status-pill {
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 13px; background: rgba(255,255,255,.1); border-radius: 24px;
+      font-size: 12px; color: rgba(255,255,255,.8);
+    }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; transition: var(--ease);
+    }
+    .status-dot.on { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,.3); }
+
+    .count-pill {
+      display: flex; align-items: center; gap: 6px;
+      padding: 5px 13px; background: rgba(255,255,255,.1); border-radius: 24px;
+      font-size: 12px; color: rgba(255,255,255,.8);
+    }
+
+    .hdr-btn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 7px 14px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22);
+      border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; transition: var(--ease);
+    }
+    .hdr-btn:hover { background: rgba(255,255,255,.25); }
+
+    /* ── Main ────────────────────────────────────── */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ─────────────────────────────────── */
+    .sidebar {
+      width: var(--sw); background: var(--sidebar-bg);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+    }
+
+    /* Agency banner */
+    .agency {
+      padding: 14px 18px;
+      background: linear-gradient(135deg, var(--primary-dark) 0%, #2563eb 100%);
+      color: #fff; flex-shrink: 0;
+    }
+    .agency-name {
+      font-size: 13px; font-weight: 600;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .agency-name::before {
+      content: ''; width: 8px; height: 8px;
+      background: var(--amber); border-radius: 50%; flex-shrink: 0;
+    }
+    .agency-meta { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 4px; }
+
+    /* Tabs */
+    .tab-bar { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .tab-btn {
+      flex: 1; padding: 12px 8px; font-size: 12px; font-weight: 500; color: var(--muted);
+      border-bottom: 2px solid transparent; transition: var(--ease);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .tab-badge {
+      background: var(--primary); color: #fff;
+      font-size: 10px; font-weight: 700; padding: 1px 6px;
+      border-radius: 99px; min-width: 18px; text-align: center;
+    }
+
+    /* Tab content */
+    .tab-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+    .tab-content.hidden { display: none; }
+
+    /* Search filter bar */
+    .filter-bar { display: flex; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .filter-wrap { flex: 1; position: relative; }
+    .filter-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+    .filter-wrap input {
+      width: 100%; padding: 8px 12px 8px 34px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; outline: none; transition: var(--ease);
+    }
+    .filter-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.1); }
+    .filter-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 7px 12px; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; font-size: 12px; font-weight: 500; color: var(--muted); transition: var(--ease); white-space: nowrap;
+    }
+    .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-chip.on { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+
+    /* Section label */
+    .section-hdr {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 14px 6px;
+    }
+    .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .section-count  { font-size: 11px; color: var(--muted); }
+
+    /* Route card */
+    .route-cards { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+    .route-card {
+      display: flex; background: var(--card); border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm); cursor: pointer; transition: var(--ease); overflow: hidden;
+    }
+    .route-card:hover  { border-color: var(--primary); box-shadow: var(--shadow); }
+    .route-card.active { border-color: var(--primary); background: var(--primary-light); }
+
+    .rc-strip { width: 5px; flex-shrink: 0; }
+    .rc-body  { flex: 1; padding: 11px 12px; min-width: 0; }
+
+    .rc-top { display: flex; align-items: flex-start; gap: 10px; }
+    .rc-num {
+      width: 28px; height: 28px; border-radius: 7px;
+      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .rc-meta { flex: 1; min-width: 0; }
+    .rc-name  { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rc-stops { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .rc-badges { display: flex; gap: 4px; flex-shrink: 0; }
+    .badge {
+      padding: 2px 7px; border-radius: 99px; font-size: 10px; font-weight: 600;
+    }
+    .badge-on  { background: #d1fae5; color: #065f46; }
+    .badge-off { background: #f3f4f6; color: #6b7280; }
+
+    .rc-foot {
+      display: flex; align-items: center; gap: 10px;
+      margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border);
+    }
+    .rc-stat { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+
+    .join-btn {
+      margin-left: auto; padding: 4px 11px;
+      background: var(--primary); color: #fff; border-radius: 6px;
+      font-size: 11px; font-weight: 600; transition: var(--ease);
+    }
+    .join-btn:hover   { background: var(--primary-dark); }
+    .join-btn.joined  { background: var(--success); }
+
+    /* User list */
+    .user-item {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 16px; border-bottom: 1px solid var(--border); transition: var(--ease);
+    }
+    .user-item:hover { background: var(--bg); }
+    .user-item.me    { background: var(--primary-light); }
+    .user-ava {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .user-info { flex: 1; min-width: 0; }
+    .user-name  { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .user-route { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .gps-pill { font-size: 10px; padding: 2px 8px; border-radius: 99px; }
+    .gps-on  { background: #d1fae5; color: #065f46; }
+    .gps-off { background: #f3f4f6; color: #6b7280; }
+
+    /* ── Map ─────────────────────────────────────── */
+    .map-wrap { flex: 1; position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+
+    .map-ctrl {
+      position: absolute; top: 14px; right: 14px;
+      display: flex; flex-direction: column; gap: 8px; z-index: 500;
+    }
+    .map-ctrl-btn {
+      width: 40px; height: 40px; background: #fff; border-radius: 10px;
+      box-shadow: var(--shadow-lg);
+      display: flex; align-items: center; justify-content: center; font-size: 18px;
+      transition: var(--ease);
+    }
+    .map-ctrl-btn:hover { transform: scale(1.06); }
+    .map-ctrl-btn.on { background: var(--primary); }
+
+    /* Route Info Panel */
+    .rip {
+      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
+      background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg);
+      padding: 14px 20px; display: flex; align-items: center; gap: 20px;
+      z-index: 500; min-width: 340px;
+      transition: opacity var(--ease), transform var(--ease);
+    }
+    .rip.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(14px); }
+    .rip-route { display: flex; align-items: center; gap: 10px; }
+    .rip-dot   { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
+    .rip-lbl   { font-size: 11px; color: var(--muted); }
+    .rip-val   { font-size: 14px; font-weight: 600; }
+    .rip-div   { width: 1px; height: 34px; background: var(--border); flex-shrink: 0; }
+    .rip-stat  { text-align: center; flex-shrink: 0; }
+    .rip-stat-n { font-size: 18px; font-weight: 700; color: var(--primary); line-height: 1; }
+    .rip-stat-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
+    .rip-close  { margin-left: auto; font-size: 16px; color: var(--muted); transition: var(--ease); padding: 4px; }
+    .rip-close:hover { color: var(--danger); }
+
+    /* ── Modals ──────────────────────────────────── */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(15,23,42,.55);
+      backdrop-filter: blur(4px); z-index: 1000;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .overlay.hidden { display: none; }
+
+    .modal {
+      background: var(--card); border-radius: 16px;
+      box-shadow: 0 24px 48px rgba(0,0,0,.22);
+      width: 100%; max-width: 500px; max-height: 90vh;
+      overflow: hidden; display: flex; flex-direction: column;
+    }
+    .modal.wide { max-width: 700px; }
+
+    .modal-hdr {
+      padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+    }
+    .modal-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--primary-light); display: flex; align-items: center;
+      justify-content: center; font-size: 22px; flex-shrink: 0;
+    }
+    .modal-title    { font-size: 16px; font-weight: 700; }
+    .modal-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .modal-x {
+      margin-left: auto; width: 30px; height: 30px; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 17px; color: var(--muted); transition: var(--ease);
+    }
+    .modal-x:hover { background: var(--bg); color: var(--danger); }
+    .modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
+    .modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-shrink: 0; }
+
+    /* Admin tabs */
+    .adm-tabs  { display: flex; gap: 4px; padding: 0 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .adm-tab   { padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; transition: var(--ease); }
+    .adm-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* Form */
+    .fg { margin-bottom: 16px; }
+    .fl { display: block; font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .fi {
+      width: 100%; padding: 9px 13px; border: 1px solid var(--border);
+      border-radius: 8px; font-size: 13px; outline: none; background: var(--bg); transition: var(--ease);
+    }
+    .fi:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.1); background: #fff; }
+
+    /* Buttons */
+    .btn {
+      padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: var(--ease);
+    }
+    .btn-primary   { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-danger    { background: var(--danger); color: #fff; }
+    .btn-danger:hover  { background: #dc2626; }
+    .btn-sm { padding: 5px 11px; font-size: 12px; }
+    .btn-full { width: 100%; flex: 1; }
+
+    /* Trip picker (join modal) */
+    .trip-picker { display: flex; flex-direction: column; gap: 8px; }
+    .trip-opt {
+      display: flex; align-items: center; gap: 12px; padding: 13px;
+      border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: var(--ease);
+    }
+    .trip-opt:hover   { border-color: var(--primary); background: var(--primary-light); }
+    .trip-opt.sel     { border-color: var(--primary); background: var(--primary-light); }
+    .trip-opt-icon    { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+    .trip-opt-info    { flex: 1; }
+    .trip-opt-name    { font-size: 13px; font-weight: 600; }
+    .trip-opt-meta    { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .trip-opt-check   { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent; transition: var(--ease); flex-shrink: 0; }
+    .trip-opt.sel .trip-opt-check { background: var(--primary); border-color: var(--primary); color: #fff; }
+
+    /* Admin trip list */
+    .adm-trip-list { display: flex; flex-direction: column; gap: 6px; }
+    .adm-trip {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 13px; background: var(--bg);
+      border-radius: 8px; border: 1px solid var(--border);
+    }
+    .adm-trip-swatch { width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; }
+    .adm-trip-info  { flex: 1; min-width: 0; }
+    .adm-trip-name  { font-size: 13px; font-weight: 600; }
+    .adm-trip-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .adm-trip-acts  { display: flex; gap: 5px; }
+
+    /* Leaflet tooltip */
+    .leaflet-tooltip { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 12px; border-radius: 6px; }
+    .leaflet-tooltip-top::before { border-top-color: #334155; }
+
+    /* Toast */
+    .toast-wrap { position: fixed; top: 76px; right: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+    .toast {
+      padding: 11px 16px; background: #fff; border-radius: 10px;
+      box-shadow: var(--shadow-lg); font-size: 13px; font-weight: 500;
+      display: flex; align-items: center; gap: 9px;
+      border-left: 4px solid var(--primary); max-width: 280px;
+      animation: tIn .3s ease;
+    }
+    .toast.ok  { border-left-color: var(--success); }
+    .toast.err { border-left-color: var(--danger); }
+    @keyframes tIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes tOut { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+
+    /* Empty state */
+    .empty { padding: 36px 20px; text-align: center; }
+    .empty-ico { font-size: 36px; margin-bottom: 10px; }
+    .empty-ttl { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+    .empty-dsc { font-size: 12px; color: var(--muted); }
+
+    /* ── Mobile bottom sheet ─────────────────────── */
+    .mob-sheet {
+      display: none; position: fixed; bottom: 0; left: 0; right: 0;
+      background: #fff; border-radius: 18px 18px 0 0;
+      box-shadow: 0 -4px 24px rgba(0,0,0,.14);
+      z-index: 600; transform: translateY(calc(100% - 118px));
+      transition: transform .3s cubic-bezier(.32,.72,0,1);
+      max-height: 75vh;
+    }
+    .mob-sheet.up { transform: translateY(0); }
+    .mob-sheet-handle { display: flex; justify-content: center; padding: 12px; cursor: pointer; }
+    .mob-sheet-bar { width: 36px; height: 4px; background: #d1d5db; border-radius: 99px; }
+    .mob-sheet-body { overflow-y: auto; max-height: calc(75vh - 52px); padding-bottom: 16px; }
+    .mob-sheet-peek { padding: 0 16px 12px; }
+    .mob-peek-title { font-size: 14px; font-weight: 700; }
+    .mob-peek-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Mobile FABs */
+    .fab-wrap { display: none; position: fixed; bottom: 134px; right: 16px; z-index: 700; flex-direction: column; gap: 10px; }
+    .fab {
+      width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff;
+      box-shadow: 0 4px 16px rgba(29,78,216,.4);
+      display: flex; align-items: center; justify-content: center; font-size: 20px; transition: var(--ease);
+    }
+    .fab:hover { transform: scale(1.08); }
+    .fab.white { background: #fff; color: var(--primary); box-shadow: var(--shadow-lg); }
+
+    /* Leaflet custom */
+    .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--shadow-lg); }
+    .lpop { font-family: 'Inter', sans-serif; font-size: 13px; }
+    .lpop-n { font-weight: 700; margin-bottom: 3px; }
+    .lpop-r { color: var(--muted); font-size: 12px; }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar      { display: none; }
+      .mob-sheet    { display: block; }
+      .fab-wrap     { display: flex; }
+      .hdr-search   { display: none; }
+      .hdr-logo-sub { display: none; }
+      .rip {
+        min-width: 0; left: 12px; right: 12px; transform: none;
+        bottom: 128px; flex-wrap: wrap; gap: 12px;
+      }
+      .rip.hidden   { transform: translateY(12px); }
+      .map-ctrl     { top: 76px; }
+      .modal        { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 95vh; }
+      .overlay      { align-items: flex-end; padding: 0; }
+    }
+    @media (max-width: 480px) {
+      .hdr { padding: 0 14px; gap: 10px; }
+      .count-pill { display: none; }
+    }
+
+    /* Util */
+    .hidden { display: none !important; }
   </style>
 </head>
+
 <body>
-
-<!-- HEADER -->
-<header>
-  <div class="logo">MG<em>Tracker</em></div>
-  <span id="statusTxt">Connecting…</span>
-  <div class="dot" id="statusDot"></div>
-  <span id="countTxt"></span>
-</header>
-
-<!-- APP -->
 <div class="app">
-  <div class="sidebar">
-    <div class="sb-body">
-      <div class="sb-section">
-        <div class="sb-title">Trip Routes</div>
-        <div id="sbTrips"><div class="empty">Loading…</div></div>
-      </div>
-      <div class="sb-section">
-        <div class="sb-title">Online Users</div>
-        <div id="sbUsers"><div class="empty">No users online</div></div>
+
+  <!-- ── Header ─────────────────────────────────────────── -->
+  <header class="hdr">
+    <div class="hdr-logo">
+      <div class="hdr-logo-icon">🚌</div>
+      <div class="hdr-logo-text">
+        <div class="hdr-logo-title">MG Tracker</div>
+        <div class="hdr-logo-sub">Yaoundé · Cameroun</div>
       </div>
     </div>
-    <div class="sb-foot">
-      <button class="btn btn-ghost btn-full" onclick="openAdmin()">⚙ Manage Trips</button>
+
+    <div class="hdr-search">
+      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+      </svg>
+      <input id="hdrSearch" type="text" placeholder="Rechercher une ligne ou un arrêt…" />
+    </div>
+
+    <div class="hdr-right">
+      <div class="status-pill">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusTxt">Connexion…</span>
+      </div>
+      <div class="count-pill">
+        👥 <span id="hdrCount">0</span> en ligne
+      </div>
+      <button class="hdr-btn" onclick="openAdmin()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
+        Admin
+      </button>
+    </div>
+  </header>
+
+  <!-- ── Main ───────────────────────────────────────────── -->
+  <div class="main">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="agency">
+        <div class="agency-name">Mekalfone Transport</div>
+        <div class="agency-meta">Réseau de transport urbain · Yaoundé, Cameroun</div>
+      </div>
+
+      <div class="tab-bar">
+        <button class="tab-btn active" id="tabLines" onclick="switchTab('lines')">
+          🚌 Lignes <span class="tab-badge" id="badgeLines">0</span>
+        </button>
+        <button class="tab-btn" id="tabPax" onclick="switchTab('pax')">
+          👥 Passagers <span class="tab-badge" id="badgePax">0</span>
+        </button>
+      </div>
+
+      <!-- Lines tab -->
+      <div class="tab-content" id="tabLinesContent">
+        <div class="filter-bar">
+          <div class="filter-wrap">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+            <input id="lineSearch" type="text" placeholder="Filtrer les lignes…" oninput="filterLines(this.value)" />
+          </div>
+          <button class="filter-chip" id="filterActive" onclick="toggleActiveFilter()">● Actives</button>
+        </div>
+        <div class="section-hdr">
+          <span class="section-label">Lignes disponibles</span>
+          <span class="section-count" id="lineCount">0</span>
+        </div>
+        <div class="route-cards" id="lineList"></div>
+      </div>
+
+      <!-- Passengers tab -->
+      <div class="tab-content hidden" id="tabPaxContent">
+        <div id="paxList"></div>
+      </div>
+    </aside>
+
+    <!-- Map -->
+    <div class="map-wrap">
+      <div id="map"></div>
+
+      <div class="map-ctrl">
+        <button class="map-ctrl-btn" id="locateBtn" title="Me localiser" onclick="locateMe()">📍</button>
+        <button class="map-ctrl-btn" id="followBtn" title="Suivre ma position" onclick="toggleFollow()">🎯</button>
+      </div>
+
+      <!-- Route info panel -->
+      <div class="rip hidden" id="rip">
+        <div class="rip-route">
+          <span class="rip-dot" id="ripDot"></span>
+          <div>
+            <div class="rip-lbl">Ligne sélectionnée</div>
+            <div class="rip-val" id="ripName">—</div>
+          </div>
+        </div>
+        <div class="rip-div"></div>
+        <div class="rip-stat"><div class="rip-stat-n" id="ripPax">0</div><div class="rip-stat-l">passagers</div></div>
+        <div class="rip-div"></div>
+        <div class="rip-stat"><div class="rip-stat-n" id="ripEta">–</div><div class="rip-stat-l">min estimés</div></div>
+        <div class="rip-div"></div>
+        <div class="rip-stat"><div class="rip-stat-n" id="ripDist">–</div><div class="rip-stat-l">km</div></div>
+        <button class="rip-close" onclick="hideRip()">✕</button>
+      </div>
+    </div>
+  </div><!-- /.main -->
+
+  <!-- Mobile bottom sheet -->
+  <div class="mob-sheet" id="mobSheet">
+    <div class="mob-sheet-handle" onclick="toggleSheet()">
+      <div class="mob-sheet-bar"></div>
+    </div>
+    <div class="mob-sheet-peek" id="mobPeek">
+      <div class="mob-peek-title" id="mobPeekTitle">Lignes disponibles</div>
+      <div class="mob-peek-sub" id="mobPeekSub">Appuyez pour voir toutes les lignes</div>
+    </div>
+    <div class="mob-sheet-body">
+      <div style="padding:0 12px 8px;">
+        <div id="mobLineList"></div>
+      </div>
     </div>
   </div>
-  <div id="map"></div>
+
+  <!-- Mobile FABs -->
+  <div class="fab-wrap">
+    <button class="fab white" onclick="locateMe()" title="Me localiser">📍</button>
+    <button class="fab" onclick="toggleSheet()" title="Lignes">🚌</button>
+  </div>
+
+</div><!-- /.app -->
+
+<!-- Toast container -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- ── WAYPOINT BAR (affiché en bas de la carte pendant l'édition) -->
+<div id="wpBar" style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
+  background:#1e3a8a; color:#fff; border-radius:12px; padding:12px 20px;
+  display:none; align-items:center; gap:14px; z-index:1500;
+  box-shadow:0 4px 24px rgba(0,0,0,.4); font-size:13px; white-space:nowrap;">
+  <span style="opacity:.8;">📍 Cliquez sur la carte pour ajouter des points · Clic droit sur un point pour le supprimer</span>
+  <span id="wpBarInfo" style="background:rgba(255,255,255,.15); padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600;"></span>
+  <button onclick="saveWp()"   style="background:#10b981;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">💾 Sauvegarder</button>
+  <button onclick="cancelWp()" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">✕ Annuler</button>
 </div>
 
-<!-- WAYPOINT TOOLBAR (shown on map during edit) -->
-<div id="wpBar">
-  <span>📍 Click map to add waypoints · Right-click marker to remove</span>
-  <span id="wpBarInfo"></span>
-  <button class="btn btn-primary btn-sm" onclick="doneWpEdit()">✓ Done</button>
-  <button class="btn btn-ghost btn-sm" onclick="cancelWpEdit()">✕ Cancel</button>
-</div>
-
-<!-- JOIN MODAL -->
-<div id="joinOverlay" class="overlay">
+<!-- ── JOIN OVERLAY ───────────────────────────────────── -->
+<div class="overlay hidden" id="joinOverlay">
   <div class="modal">
-    <h2>Welcome to MG Tracker</h2>
-    <p class="sub">Enter your name and select a trip. Your real-time position will appear on the map.</p>
-
-    <div class="fg">
-      <label>Your Name</label>
-      <input type="text" id="nameIn" placeholder="e.g. Jean-Paul" maxlength="30"/>
+    <div class="modal-hdr">
+      <div class="modal-icon">🚌</div>
+      <div>
+        <div class="modal-title">Rejoindre MG Tracker</div>
+        <div class="modal-subtitle">Suivez votre bus en temps réel · Yaoundé</div>
+      </div>
     </div>
-    <div class="fg">
-      <label>Select a Trip</label>
-      <div id="tripCards" class="trip-cards"><div class="empty">Loading trips…</div></div>
+    <div class="modal-body">
+      <div class="fg">
+        <label class="fl">Votre nom complet</label>
+        <input class="fi" id="nameInput" type="text" placeholder="Ex: Jean Dupont" maxlength="30" />
+      </div>
+      <div class="fg" style="margin-bottom:0;">
+        <label class="fl">Choisissez votre ligne</label>
+        <div class="trip-picker" id="joinPicker"></div>
+      </div>
     </div>
-    <button class="btn btn-primary btn-full" onclick="joinTrip()">Join Trip →</button>
+    <div class="modal-foot">
+      <button class="btn btn-primary btn-full" onclick="doJoin()">
+        🚀 Rejoindre le suivi
+      </button>
+    </div>
   </div>
 </div>
 
-<!-- ADMIN MODAL -->
-<div id="adminOverlay" class="overlay hidden">
-  <div class="modal modal-lg">
+<!-- ── ADMIN OVERLAY ──────────────────────────────────── -->
+<div class="overlay hidden" id="adminOverlay">
+  <div class="modal wide">
     <div class="modal-hdr">
-      <h2>Manage Trips</h2>
-      <button class="btn btn-ghost btn-sm" onclick="closeAdmin()">✕ Close</button>
+      <div class="modal-icon">⚙️</div>
+      <div>
+        <div class="modal-title">Tableau de bord Administrateur</div>
+        <div class="modal-subtitle">Gestion des lignes et des itinéraires</div>
+      </div>
+      <button class="modal-x" onclick="closeAdmin()">✕</button>
     </div>
 
-    <div id="admList"></div>
+    <div class="adm-tabs">
+      <button class="adm-tab active" id="admTabLines" onclick="admTab('lines')">📋 Lignes</button>
+      <button class="adm-tab" id="admTabEdit"  onclick="admTab('edit')">✏️ Modifier</button>
+    </div>
 
-    <hr class="div"/>
+    <div class="modal-body" id="admBody">
 
-    <div id="admForm">
-      <p style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:14px" id="formTitle">Add New Trip</p>
-
-      <div class="fg-row">
-        <div class="fg" style="flex:2">
-          <label>Trip Name</label>
-          <input type="text" id="tNameIn" placeholder="e.g. Bastos → Mvan" maxlength="60"/>
+      <!-- Lines tab -->
+      <div id="admLines">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-size:12px;color:var(--muted);">Gérez les lignes et leurs itinéraires</span>
+          <button class="btn btn-primary btn-sm" onclick="showAddForm()">+ Nouvelle ligne</button>
         </div>
-        <div class="fg">
-          <label>Color</label>
-          <input type="color" id="tColorIn" value="#9b59b6"/>
-        </div>
-      </div>
+        <div class="adm-trip-list" id="admTripList"></div>
 
-      <div class="fg">
-        <label>Route Waypoints</label>
-        <div class="wp-box">
-          <div class="wp-hint" id="wpHint">Click "Edit on Map" to draw the route by clicking on the map.</div>
-          <div class="wp-list" id="wpList"></div>
-          <div class="wp-acts">
-            <button class="btn btn-ghost btn-sm" onclick="startWpEdit()">📍 Edit on Map</button>
-            <button class="btn btn-ghost btn-sm" onclick="clearWaypoints()">✕ Clear</button>
+        <div class="hidden" id="addForm" style="margin-top:14px;padding:14px;background:var(--bg);border:1.5px dashed var(--border);border-radius:8px;">
+          <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Nouvelle ligne</div>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:12px;">
+            <div class="fg" style="margin:0;">
+              <label class="fl">Nom de la ligne</label>
+              <input class="fi" id="newName" placeholder="Ex: Mfoundi → Mokolo" />
+            </div>
+            <div class="fg" style="margin:0;">
+              <label class="fl">Couleur</label>
+              <input type="color" class="fi" id="newColor" value="#3b82f6" style="height:42px;padding:4px 6px;cursor:pointer;" />
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm" onclick="doAddTrip()">Créer</button>
+            <button class="btn btn-secondary btn-sm" onclick="hideAddForm()">Annuler</button>
           </div>
         </div>
       </div>
 
-      <div style="display:flex;gap:9px;margin-top:4px">
-        <button class="btn btn-primary" id="saveTripBtn" onclick="saveTrip()">Save Trip</button>
-        <button class="btn btn-ghost" onclick="resetForm()">Cancel</button>
+      <!-- Edit tab -->
+      <div class="hidden" id="admEdit">
+        <div class="fg">
+          <label class="fl">Nom de la ligne</label>
+          <input class="fi" id="editName" placeholder="Nom de la ligne" />
+        </div>
+        <div class="fg">
+          <label class="fl">Couleur</label>
+          <input type="color" class="fi" id="editColor" value="#3b82f6" style="height:42px;padding:4px 6px;cursor:pointer;" />
+        </div>
+        <div style="display:flex;gap:8px;margin-top:6px;">
+          <button class="btn btn-primary" onclick="doSaveEdit()">💾 Enregistrer</button>
+          <button class="btn btn-secondary" onclick="admTab('lines')">Annuler</button>
+        </div>
       </div>
-    </div>
+
+    </div><!-- /#admBody -->
   </div>
 </div>
 
-<!-- LEAFLET + SOCKET.IO -->
+<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
 <script>
-/* ── STATE ───────────────────────────────────────── */
-const YAOUNDE = [3.848, 11.502];
-const SESSION_KEY = 'mg_join';
+/* ================================================================
+   STATE
+================================================================ */
+let myId       = null;
+let hasJoined  = false;
+let trips      = [];
+let users      = {};
+let tripLayers = {};   // trip_id → L.LayerGroup
+let userMarks  = {};   // user_id → L.Marker
+let wpActive   = false;
+let wpPoints   = [];
+let wpMarkers  = [];   // Leaflet circleMarkers sur la carte
+let wpPreview  = null;
+let autoFollow = false;
+let geoWatch   = null;
+let editTripId = null;
+let selTripId  = null;
+let lineFilter = '';
+let activeOnly = false;
+let selJoinId  = null;
+let sheetUp    = false;
 
-let map, socket;
-let myId      = null;
-let hasJoined = false;   // true once user submits the join form
-let trips = [];
-let users = {};
-let tripGroups = {};   // {trip_id: L.LayerGroup}
-let userMarkers = {};  // {sid: L.CircleMarker}
+/* ================================================================
+   SOCKET
+================================================================ */
+const socket = io();
 
-// waypoint editor
-let wpActive  = false;
-let wpPoints  = [];
-let wpMarkers = [];
-let wpPreview = null;
-let wpTripId  = null;
-let wpSavedName  = '';
-let wpSavedColor = '#9b59b6';
+socket.on('connect',       ()  => setConnected(true));
+socket.on('disconnect',    ()  => { setConnected(false); stopGeo(); });
+socket.on('user_id',       d   => { myId = d.id; autoRejoin(); });
+socket.on('trips_updated', d   => { trips = d; onTripsUpdated(); });
+socket.on('users_updated', d   => { users = {}; d.forEach(u => users[u.id] = u); onUsersUpdated(); });
 
-let autoFollow  = true;
-let geoWatchId  = null;
-let geoRetryTid = null;
-
-/* ── MAP ─────────────────────────────────────────── */
-function initMap() {
-  map = L.map('map').setView(YAOUNDE, 13);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | Mekalfone Group',
-    maxZoom: 19
-  }).addTo(map);
-  map.on('click', e => { if (wpActive) addWpPoint(e.latlng.lat, e.latlng.lng); });
-  map.on('movestart', () => { autoFollow = false; });
+/* ================================================================
+   CONNECTION STATUS
+================================================================ */
+function setConnected(on) {
+  document.getElementById('statusDot').className = 'status-dot' + (on ? ' on' : '');
+  document.getElementById('statusTxt').textContent = on ? 'Connecté' : 'Déconnecté';
 }
 
-/* ── SOCKET ──────────────────────────────────────── */
-function initSocket() {
-  socket = io({ reconnection: true, reconnectionDelay: 1000, reconnectionAttempts: Infinity });
+/* ================================================================
+   MAP
+================================================================ */
+const map = L.map('map', { zoomControl: false }).setView([3.848, 11.502], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19
+}).addTo(map);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-  socket.on('connect', () => {
-    document.getElementById('statusDot').classList.add('on');
-    document.getElementById('statusTxt').textContent = 'Connected';
-  });
-
-  socket.on('disconnect', reason => {
-    document.getElementById('statusDot').classList.remove('on');
-    // 'io server disconnect' = server kicked us intentionally; otherwise we reconnect
-    document.getElementById('statusTxt').textContent =
-      reason === 'io server disconnect' ? 'Disconnected' : 'Reconnecting…';
-  });
-
-  // user_id arrives on every (re)connect — use it as the trigger to rejoin
-  socket.on('user_id', d => {
-    const prevId = myId;
-    myId = d.id;
-    // If we had already joined before (reconnect scenario), silently rejoin
-    if (hasJoined && prevId !== null) {
-      const saved = sessionStorage.getItem(SESSION_KEY);
-      if (saved) {
-        socket.emit('join_trip', JSON.parse(saved));
-        ensureGeo();
-      }
-    }
-  });
-
-  socket.on('trips_updated', data => {
-    trips = data;
-    renderRoutes();
-    renderSbTrips();
-    renderTripCards();
-    if (!document.getElementById('adminOverlay').classList.contains('hidden')) renderAdmList();
-  });
-
-  socket.on('users_updated', data => {
-    users = {};
-    data.forEach(u => { users[u.id] = u; });
-    renderUserMarkers();
-    renderSbUsers();
-    const n = data.length;
-    document.getElementById('countTxt').textContent = n ? `${n} online` : '';
-  });
-}
-
-/* ── TRIP ROUTES ─────────────────────────────────── */
-function renderRoutes() {
-  Object.values(tripGroups).forEach(g => map.removeLayer(g));
-  tripGroups = {};
-  trips.forEach(trip => {
-    const wps = trip.waypoints;
-    if (!wps || wps.length < 2) return;
-    const g = L.layerGroup().addTo(map);
-    L.polyline(wps, { color: trip.color, weight: 5, opacity: 0.85, lineJoin: 'round' })
-      .bindTooltip(trip.name, { sticky: true }).addTo(g);
-    L.circleMarker(wps[0], { radius: 7, fillColor: '#fff', color: trip.color, weight: 3, fillOpacity: 1 })
-      .bindPopup(`<b>Départ&nbsp;:</b> ${esc(trip.name)}`).addTo(g);
-    L.circleMarker(wps[wps.length - 1], { radius: 7, fillColor: trip.color, color: '#fff', weight: 2, fillOpacity: 1 })
-      .bindPopup(`<b>Arrivée&nbsp;:</b> ${esc(trip.name)}`).addTo(g);
-    tripGroups[trip.id] = g;
-  });
-}
-
-/* ── USER MARKERS ────────────────────────────────── */
-function renderUserMarkers() {
-  const alive = new Set(Object.keys(users));
-  Object.keys(userMarkers).forEach(sid => {
-    if (!alive.has(sid)) { map.removeLayer(userMarkers[sid]); delete userMarkers[sid]; }
-  });
-  Object.values(users).forEach(u => {
-    if (u.lat === null || u.lng === null) return;
-    const trip  = trips.find(t => t.id === u.trip_id);
-    const color = trip ? trip.color : '#64748b';
-    const isMe  = u.id === myId;
-    const pos   = [u.lat, u.lng];
-    if (userMarkers[u.id]) {
-      userMarkers[u.id].setLatLng(pos);
-    } else {
-      const m = L.circleMarker(pos, {
-        radius: isMe ? 11 : 8,
-        fillColor: color, color: '#fff',
-        weight: isMe ? 3 : 2, opacity: 1, fillOpacity: isMe ? 1 : 0.85
-      }).addTo(map);
-      m.bindTooltip(isMe ? `${esc(u.username)} (you)` : esc(u.username), { direction: 'top' });
-      userMarkers[u.id] = m;
-    }
-    if (isMe && autoFollow) map.setView(pos, Math.max(map.getZoom(), 15));
-  });
-}
-
-/* ── SIDEBAR ─────────────────────────────────────── */
-function renderSbTrips() {
-  const el = document.getElementById('sbTrips');
-  if (!trips.length) { el.innerHTML = '<div class="empty">No trips defined</div>'; return; }
-  el.innerHTML = trips.map(t => {
-    const cnt = Object.values(users).filter(u => u.trip_id === t.id).length;
-    return `<div class="trip-row">
-      <div class="trip-dot" style="background:${t.color}"></div>
-      <span class="trip-label" title="${esc(t.name)}">${esc(t.name)}</span>
-      ${cnt ? `<span class="trip-badge">${cnt}</span>` : ''}
-    </div>`;
-  }).join('');
-}
-
-function renderSbUsers() {
-  const el = document.getElementById('sbUsers');
-  const list = Object.values(users);
-  if (!list.length) { el.innerHTML = '<div class="empty">No users online</div>'; return; }
-  el.innerHTML = list.map(u => {
-    const trip  = trips.find(t => t.id === u.trip_id);
-    const color = trip ? trip.color : '#64748b';
-    const init  = (u.username || '?').charAt(0).toUpperCase();
-    return `<div class="user-row">
-      <div class="user-av" style="background:${color}">${init}</div>
-      <div class="user-info">
-        <div class="user-name">${esc(u.username)}${u.id === myId ? ' <span style="color:var(--muted);font-weight:400">(you)</span>' : ''}</div>
-        <div class="user-sub">${trip ? esc(trip.name) : 'No trip'}</div>
-      </div>
-      <span class="${u.lat !== null ? 'loc-on' : 'loc-off'}">●</span>
-    </div>`;
-  }).join('');
-}
-
-/* ── JOIN MODAL ──────────────────────────────────── */
-function renderTripCards() {
-  const el = document.getElementById('tripCards');
-  if (!trips.length) { el.innerHTML = '<div class="empty">No trips available</div>'; return; }
-  el.innerHTML = trips.map((t, i) => `
-    <div class="trip-card ${i === 0 ? 'sel' : ''}" data-id="${t.id}" onclick="pickCard(this)">
-      <div class="tc-dot" style="background:${t.color}"></div>
-      <span class="tc-name">${esc(t.name)}</span>
-      <span class="tc-chk">✓</span>
-    </div>`).join('');
-}
-
-function pickCard(el) {
-  document.querySelectorAll('.trip-card').forEach(c => c.classList.remove('sel'));
-  el.classList.add('sel');
-}
-
-function joinTrip() {
-  const name = document.getElementById('nameIn').value.trim();
-  if (!name) { shake(document.getElementById('nameIn')); return; }
-  const sel = document.querySelector('.trip-card.sel');
-  if (!sel) { alert('Please select a trip.'); return; }
-  const data = { username: name, trip_id: sel.dataset.id };
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify(data));
-  hasJoined = true;
-  socket.emit('join_trip', data);
-  document.getElementById('joinOverlay').classList.add('hidden');
-  autoFollow = true;
-  startGeo();
-}
-
-/* ── GEOLOCATION ─────────────────────────────────── */
-function startGeo() {
-  if (!navigator.geolocation || geoWatchId !== null) return;
-  geoWatchId = navigator.geolocation.watchPosition(
-    pos => {
-      socket.emit('location_update', { lat: pos.coords.latitude, lng: pos.coords.longitude });
-    },
-    err => {
-      console.warn('Geo error:', err.message);
-      // Clear and schedule a retry so we don't silently stop sending positions
-      if (geoWatchId !== null) {
-        navigator.geolocation.clearWatch(geoWatchId);
-        geoWatchId = null;
-      }
-      clearTimeout(geoRetryTid);
-      geoRetryTid = setTimeout(startGeo, 8000);
-    },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-  );
-}
-
-// Ensure geo is running (called after reconnect)
-function ensureGeo() {
-  if (geoWatchId === null) startGeo();
-}
-
-/* ── ADMIN PANEL ─────────────────────────────────── */
-function openAdmin() { renderAdmList(); resetForm(); document.getElementById('adminOverlay').classList.remove('hidden'); }
-function closeAdmin() { if (wpActive) cancelWpEdit(); document.getElementById('adminOverlay').classList.add('hidden'); }
-
-function renderAdmList() {
-  const el = document.getElementById('admList');
-  if (!trips.length) { el.innerHTML = '<div class="empty" style="margin-bottom:10px">No trips yet</div>'; return; }
-  el.innerHTML = trips.map(t => `
-    <div class="adm-row">
-      <div class="adm-dot" style="background:${t.color}"></div>
-      <span class="adm-name">${esc(t.name)}</span>
-      <span class="adm-wp">${t.waypoints.length} pts</span>
-      <button class="btn btn-ghost btn-sm btn-ico" onclick="editTrip('${t.id}')" title="Edit">✏</button>
-      <button class="btn btn-danger btn-sm btn-ico" onclick="delTrip('${t.id}')" title="Delete">🗑</button>
-    </div>`).join('');
-}
-
-function editTrip(id) {
-  const t = trips.find(x => x.id === id);
-  if (!t) return;
-  wpTripId = id;
-  document.getElementById('formTitle').textContent = 'Edit Trip';
-  document.getElementById('tNameIn').value = t.name;
-  document.getElementById('tColorIn').value = t.color;
-  document.getElementById('saveTripBtn').textContent = 'Update Trip';
-  wpPoints = t.waypoints.map(p => [...p]);
-  renderWpList();
-}
-
-function resetForm() {
-  wpTripId = null;
-  document.getElementById('formTitle').textContent = 'Add New Trip';
-  document.getElementById('tNameIn').value = '';
-  document.getElementById('tColorIn').value = '#9b59b6';
-  document.getElementById('saveTripBtn').textContent = 'Save Trip';
-  wpPoints = [];
-  renderWpList();
-  document.getElementById('wpHint').textContent = 'Click "Edit on Map" to draw the route by clicking on the map.';
-}
-
-async function saveTrip() {
-  const name  = document.getElementById('tNameIn').value.trim();
-  const color = document.getElementById('tColorIn').value;
-  if (!name) { shake(document.getElementById('tNameIn')); return; }
-  if (wpPoints.length < 2) { alert('Add at least 2 waypoints to define the route.'); return; }
-  const body   = { name, color, waypoints: wpPoints };
-  const url    = wpTripId ? `/api/trips/${wpTripId}` : '/api/trips';
-  const method = wpTripId ? 'PUT' : 'POST';
-  try {
-    const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (res.ok) { resetForm(); renderAdmList(); }
-    else alert('Failed to save trip.');
-  } catch { alert('Network error.'); }
-}
-
-async function delTrip(id) {
-  if (!confirm('Delete this trip? Users on it will lose their route.')) return;
-  try {
-    const res = await fetch(`/api/trips/${id}`, { method: 'DELETE' });
-    if (res.ok) renderAdmList();
-  } catch { alert('Network error.'); }
-}
-
-/* ── WAYPOINT EDITOR ─────────────────────────────── */
-function startWpEdit() {
-  wpSavedName  = document.getElementById('tNameIn').value;
-  wpSavedColor = document.getElementById('tColorIn').value;
-  document.getElementById('adminOverlay').classList.add('hidden');
-  wpActive = true;
-  document.getElementById('wpBar').classList.add('show');
-  updateWpBar();
-  clearWpMapMarkers();
-  wpPoints.forEach((p, i) => placeWpMarker(p[0], p[1], i));
-  drawWpPreview();
-}
-
-function doneWpEdit() {
-  wpActive = false;
-  document.getElementById('wpBar').classList.remove('show');
-  clearWpMapMarkers();
-  renderWpList();
-  document.getElementById('wpHint').textContent =
-    wpPoints.length ? `${wpPoints.length} waypoint${wpPoints.length > 1 ? 's' : ''} defined. Click "Edit on Map" to modify.`
-                    : 'Click "Edit on Map" to draw the route by clicking on the map.';
-  document.getElementById('adminOverlay').classList.remove('hidden');
-}
-
-function cancelWpEdit() {
-  wpActive = false;
-  document.getElementById('wpBar').classList.remove('show');
-  clearWpMapMarkers();
-  document.getElementById('tNameIn').value  = wpSavedName;
-  document.getElementById('tColorIn').value = wpSavedColor;
-  document.getElementById('adminOverlay').classList.remove('hidden');
-}
-
-function addWpPoint(lat, lng) {
+map.on('click', e => {
+  if (!wpActive) return;
+  const lat = e.latlng.lat, lng = e.latlng.lng;
   wpPoints.push([lat, lng]);
   placeWpMarker(lat, lng, wpPoints.length - 1);
   drawWpPreview();
   updateWpBar();
+});
+
+/* ================================================================
+   ROUTES ON MAP
+================================================================ */
+function drawRoutes() {
+  Object.values(tripLayers).forEach(g => g.clearLayers());
+  tripLayers = {};
+
+  trips.forEach(trip => {
+    const g = L.layerGroup().addTo(map);
+    tripLayers[trip.id] = g;
+    const wps = trip.waypoints || [];
+    if (wps.length < 2) return;
+
+    const poly = L.polyline(wps, { color: trip.color, weight: 4, opacity: .85 }).addTo(g);
+    poly.bindTooltip(`<b>${esc(trip.name)}</b>`, { sticky: true });
+    poly.on('click', () => showRip(trip));
+
+    L.marker(wps[0],           { icon: routePin(trip.color, '🚌') }).addTo(g)
+     .bindPopup(`<div class="lpop"><div class="lpop-n">Départ</div><div class="lpop-r">${esc(trip.name)}</div></div>`);
+    L.marker(wps[wps.length-1],{ icon: routePin(trip.color, '🏁') }).addTo(g)
+     .bindPopup(`<div class="lpop"><div class="lpop-n">Arrivée</div><div class="lpop-r">${esc(trip.name)}</div></div>`);
+  });
 }
 
-function placeWpMarker(lat, lng, idx) {
-  const color = document.getElementById('tColorIn').value;
+function routePin(color, emoji) {
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:32px;height:32px;border-radius:50%;background:${color};border:3px solid #fff;
+      box-shadow:0 2px 8px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:14px;">${emoji}</div>`,
+    iconSize: [32,32], iconAnchor: [16,16]
+  });
+}
+
+/* ================================================================
+   USER MARKERS
+================================================================ */
+function drawUsers() {
+  // remove stale
+  Object.keys(userMarks).forEach(uid => {
+    if (!users[uid]) { map.removeLayer(userMarks[uid]); delete userMarks[uid]; }
+  });
+
+  Object.values(users).forEach(u => {
+    if (!u.lat || !u.lng) return;
+    const trip  = trips.find(t => t.id === u.trip_id);
+    const color = trip ? trip.color : '#6b7280';
+    const isMe  = u.id === myId;
+    const ini   = (u.username || '?').charAt(0).toUpperCase();
+    const icon  = userPin(color, ini, isMe);
+    const popup = `<div class="lpop"><div class="lpop-n">${esc(u.username)}${isMe?' (vous)':''}</div><div class="lpop-r">${trip ? esc(trip.name) : 'Ligne inconnue'}</div></div>`;
+
+    if (userMarks[u.id]) {
+      userMarks[u.id].setLatLng([u.lat, u.lng]).setIcon(icon);
+    } else {
+      userMarks[u.id] = L.marker([u.lat, u.lng], { icon }).addTo(map).bindPopup(popup);
+    }
+  });
+
+  if (autoFollow && myId && users[myId]?.lat) {
+    map.setView([users[myId].lat, users[myId].lng]);
+  }
+}
+
+function userPin(color, letter, isMe) {
+  const sz  = isMe ? 44 : 36;
+  const shd = isMe
+    ? `box-shadow:0 0 0 3px ${color}55,0 2px 8px rgba(0,0,0,.3);`
+    : `box-shadow:0 2px 6px rgba(0,0,0,.22);`;
+  return L.divIcon({
+    className: '',
+    html: `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${color};border:2px solid #fff;
+      ${shd}display:flex;align-items:center;justify-content:center;
+      font-size:${isMe?16:13}px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;">${letter}</div>`,
+    iconSize: [sz,sz], iconAnchor: [sz/2,sz/2]
+  });
+}
+
+/* ================================================================
+   ROUTE INFO PANEL
+================================================================ */
+function showRip(trip) {
+  selTripId = trip.id;
+  document.getElementById('ripDot').style.background  = trip.color;
+  document.getElementById('ripName').textContent       = trip.name;
+  refreshRip();
+  document.getElementById('rip').classList.remove('hidden');
+}
+
+function hideRip() {
+  document.getElementById('rip').classList.add('hidden');
+  selTripId = null;
+}
+
+function refreshRip() {
+  if (!selTripId) return;
+  const trip = trips.find(t => t.id === selTripId);
+  if (!trip) return;
+  const pax  = Object.values(users).filter(u => u.trip_id === selTripId).length;
+  const dist = routeDist(trip.waypoints);
+  const eta  = Math.round(dist / 0.333); // ~20 km/h
+  document.getElementById('ripPax').textContent  = pax;
+  document.getElementById('ripDist').textContent = dist.toFixed(1);
+  document.getElementById('ripEta').textContent  = eta || '–';
+}
+
+/* ================================================================
+   SIDEBAR – LINES
+================================================================ */
+function renderLines() {
+  let list = trips;
+  if (lineFilter) list = list.filter(t => t.name.toLowerCase().includes(lineFilter.toLowerCase()));
+  if (activeOnly) list = list.filter(t => Object.values(users).some(u => u.trip_id === t.id));
+
+  document.getElementById('lineCount').textContent  = list.length + ' ligne' + (list.length !== 1 ? 's' : '');
+  document.getElementById('badgeLines').textContent = trips.length;
+
+  const myTripId = myId && users[myId] ? users[myId].trip_id : null;
+
+  const html = list.length ? list.map((t, i) => {
+    const pax   = Object.values(users).filter(u => u.trip_id === t.id).length;
+    const dist  = routeDist(t.waypoints);
+    const stops = (t.waypoints || []).length;
+    const on    = pax > 0;
+    const isMy  = t.id === myTripId;
+
+    return `<div class="route-card${isMy?' active':''}" onclick="selectLine('${t.id}')">
+      <div class="rc-strip" style="background:${t.color}"></div>
+      <div class="rc-body">
+        <div class="rc-top">
+          <div class="rc-num" style="background:${t.color}">${i+1}</div>
+          <div class="rc-meta">
+            <div class="rc-name">${esc(t.name)}</div>
+            <div class="rc-stops">${stops} arrêts · ${dist.toFixed(1)} km</div>
+          </div>
+          <div class="rc-badges">
+            <span class="badge ${on?'badge-on':'badge-off'}">${on?'● Actif':'○ Vide'}</span>
+          </div>
+        </div>
+        <div class="rc-foot">
+          <span class="rc-stat">👥 ${pax} passager${pax!==1?'s':''}</span>
+          <span class="rc-stat">📍 ${stops} pts</span>
+          <button class="join-btn${isMy?' joined':''}"
+            onclick="event.stopPropagation();joinLine('${t.id}')">
+            ${isMy ? '✓ Ma ligne' : 'Rejoindre'}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') : `<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">Aucune ligne trouvée</div><div class="empty-dsc">Modifiez votre recherche</div></div>`;
+
+  document.getElementById('lineList').innerHTML   = html;
+  document.getElementById('mobLineList').innerHTML = html;
+
+  // Update mobile peek
+  const act = trips.filter(t => Object.values(users).some(u => u.trip_id === t.id)).length;
+  document.getElementById('mobPeekTitle').textContent = `${trips.length} ligne${trips.length!==1?'s':''} disponibles`;
+  document.getElementById('mobPeekSub').textContent   = act > 0
+    ? `${act} ligne${act!==1?'s':''} active${act!==1?'s':''}` : 'Aucun passager en ligne';
+}
+
+function selectLine(tripId) {
+  const trip = trips.find(t => t.id === tripId);
+  if (!trip) return;
+  showRip(trip);
+  if ((trip.waypoints || []).length >= 2) {
+    map.fitBounds(L.latLngBounds(trip.waypoints.map(w => L.latLng(w[0],w[1]))), { padding: [40,40] });
+  }
+}
+
+function joinLine(tripId) {
+  if (!hasJoined) {
+    document.getElementById('joinOverlay').classList.remove('hidden');
+    setTimeout(() => pickJoinTrip(tripId), 80);
+    return;
+  }
+  const u = users[myId];
+  if (!u) return;
+  socket.emit('join_trip', { username: u.username, trip_id: tripId });
+  const s = JSON.parse(sessionStorage.getItem('mg_join') || '{}');
+  s.trip_id = tripId;
+  sessionStorage.setItem('mg_join', JSON.stringify(s));
+  toast('✓ Ligne changée', 'ok');
+}
+
+function filterLines(q) { lineFilter = q; renderLines(); }
+function toggleActiveFilter() {
+  activeOnly = !activeOnly;
+  document.getElementById('filterActive').classList.toggle('on', activeOnly);
+  renderLines();
+}
+
+/* ================================================================
+   SIDEBAR – PASSENGERS
+================================================================ */
+function renderPax() {
+  const list = Object.values(users);
+  document.getElementById('badgePax').textContent = list.length;
+  document.getElementById('hdrCount').textContent = list.length;
+
+  if (!list.length) {
+    document.getElementById('paxList').innerHTML = `<div class="empty"><div class="empty-ico">👥</div><div class="empty-ttl">Aucun passager</div><div class="empty-dsc">Partagez le lien pour inviter</div></div>`;
+    return;
+  }
+
+  document.getElementById('paxList').innerHTML = list.map(u => {
+    const trip  = trips.find(t => t.id === u.trip_id);
+    const color = trip ? trip.color : '#6b7280';
+    const isMe  = u.id === myId;
+    const gps   = !!(u.lat && u.lng);
+
+    return `<div class="user-item${isMe?' me':''}">
+      <div class="user-ava" style="background:${color}">${(u.username||'?').charAt(0).toUpperCase()}</div>
+      <div class="user-info">
+        <div class="user-name">${esc(u.username)}${isMe?' <span style="font-size:9px;background:var(--primary);color:#fff;padding:1px 5px;border-radius:99px;vertical-align:middle;">Vous</span>':''}</div>
+        <div class="user-route">${trip ? esc(trip.name) : 'Ligne inconnue'}</div>
+      </div>
+      <span class="gps-pill ${gps?'gps-on':'gps-off'}">${gps?'📍 GPS':'❌ Hors ligne'}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ================================================================
+   JOIN
+================================================================ */
+function renderJoinPicker() {
+  document.getElementById('joinPicker').innerHTML = trips.map((t, i) => {
+    const dist = routeDist(t.waypoints);
+    return `<div class="trip-opt" id="jopt_${t.id}" onclick="pickJoinTrip('${t.id}')">
+      <div class="trip-opt-icon" style="background:${t.color}20;border:2px solid ${t.color}">🚌</div>
+      <div class="trip-opt-info">
+        <div class="trip-opt-name">${esc(t.name)}</div>
+        <div class="trip-opt-meta">${(t.waypoints||[]).length} arrêts · ${dist.toFixed(1)} km</div>
+      </div>
+      <div class="trip-opt-check">✓</div>
+    </div>`;
+  }).join('') || `<div class="empty-dsc" style="padding:12px 0;">Aucune ligne disponible</div>`;
+
+  if (trips.length) pickJoinTrip(selJoinId || trips[0].id);
+}
+
+function pickJoinTrip(id) {
+  selJoinId = id;
+  document.querySelectorAll('.trip-opt').forEach(el => el.classList.remove('sel'));
+  const el = document.getElementById('jopt_' + id);
+  if (el) el.classList.add('sel');
+}
+
+function doJoin() {
+  const name = document.getElementById('nameInput').value.trim();
+  if (!name)       { toast('⚠️ Entrez votre nom', 'err'); return; }
+  if (!selJoinId)  { toast('⚠️ Choisissez une ligne', 'err'); return; }
+
+  socket.emit('join_trip', { username: name, trip_id: selJoinId });
+  sessionStorage.setItem('mg_join', JSON.stringify({ username: name, trip_id: selJoinId }));
+  hasJoined = true;
+  document.getElementById('joinOverlay').classList.add('hidden');
+  startGeo();
+  toast('✓ Vous avez rejoint le suivi !', 'ok');
+}
+
+function autoRejoin() {
+  const raw = sessionStorage.getItem('mg_join');
+  if (!raw) { document.getElementById('joinOverlay').classList.remove('hidden'); return; }
+  const { username, trip_id } = JSON.parse(raw);
+  if (!username || !trip_id) { document.getElementById('joinOverlay').classList.remove('hidden'); return; }
+  socket.emit('join_trip', { username, trip_id });
+  hasJoined = true;
+  document.getElementById('nameInput').value = username;
+  selJoinId = trip_id;
+  startGeo();
+}
+
+/* ================================================================
+   GEO
+================================================================ */
+function startGeo() {
+  if (!navigator.geolocation) return;
+  stopGeo();
+  geoWatch = navigator.geolocation.watchPosition(
+    p => socket.emit('location_update', { lat: p.coords.latitude, lng: p.coords.longitude }),
+    () => setTimeout(startGeo, 8000),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+  );
+}
+
+function stopGeo() {
+  if (geoWatch !== null) { navigator.geolocation.clearWatch(geoWatch); geoWatch = null; }
+}
+
+function locateMe() {
+  if (!navigator.geolocation) { toast('❌ Géolocalisation non disponible', 'err'); return; }
+  navigator.geolocation.getCurrentPosition(
+    p => { map.setView([p.coords.latitude, p.coords.longitude], 16, { animate: true }); toast('📍 Position localisée', 'ok'); },
+    () => toast('❌ Impossible de vous localiser', 'err'),
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+function toggleFollow() {
+  autoFollow = !autoFollow;
+  document.getElementById('followBtn').classList.toggle('on', autoFollow);
+  toast(autoFollow ? '🎯 Suivi automatique activé' : 'Suivi automatique désactivé');
+}
+
+/* ================================================================
+   ADMIN
+================================================================ */
+function openAdmin() {
+  if (wpActive) stopWp();
+  renderAdmList();
+  document.getElementById('adminOverlay').classList.remove('hidden');
+}
+function closeAdmin() {
+  document.getElementById('adminOverlay').classList.add('hidden');
+  if (wpActive) stopWp();
+}
+
+const ADM_TABS = {
+  lines: { btn: 'admTabLines', panel: 'admLines' },
+  edit:  { btn: 'admTabEdit',  panel: 'admEdit'  },
+};
+
+function admTab(tab) {
+  Object.entries(ADM_TABS).forEach(([k,v]) => {
+    document.getElementById(v.btn).classList.toggle('active', k === tab);
+    document.getElementById(v.panel).classList.toggle('hidden', k !== tab);
+  });
+}
+
+function renderAdmList() {
+  document.getElementById('admTripList').innerHTML = trips.length
+    ? trips.map(t => `<div class="adm-trip">
+        <div class="adm-trip-swatch" style="background:${t.color}"></div>
+        <div class="adm-trip-info">
+          <div class="adm-trip-name">${esc(t.name)}</div>
+          <div class="adm-trip-meta">${(t.waypoints||[]).length} points de passage</div>
+        </div>
+        <div class="adm-trip-acts">
+          <button class="btn btn-secondary btn-sm" onclick="startEdit('${t.id}')" title="Renommer / couleur">✏️</button>
+          <button class="btn btn-primary btn-sm" onclick="startWpEdit('${t.id}')" title="Tracer l'itinéraire sur la carte" style="gap:5px;">📍 Itinéraire</button>
+          <button class="btn btn-danger btn-sm" onclick="doDelete('${t.id}')" title="Supprimer">🗑️</button>
+        </div>
+      </div>`).join('')
+    : `<div class="empty"><div class="empty-ico">🚌</div><div class="empty-ttl">Aucune ligne</div><div class="empty-dsc">Créez votre première ligne</div></div>`;
+}
+
+function showAddForm() { document.getElementById('addForm').classList.remove('hidden'); }
+function hideAddForm() { document.getElementById('addForm').classList.add('hidden'); document.getElementById('newName').value = ''; }
+
+function doAddTrip() {
+  const name  = document.getElementById('newName').value.trim();
+  const color = document.getElementById('newColor').value;
+  if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
+  fetch('/api/trips', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, color, waypoints:[] }) })
+    .then(() => { hideAddForm(); toast('✓ Ligne créée', 'ok'); });
+}
+
+function startEdit(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t) return;
+  editTripId = id;
+  document.getElementById('editName').value  = t.name;
+  document.getElementById('editColor').value = t.color;
+  admTab('edit');
+}
+
+function doSaveEdit() {
+  if (!editTripId) return;
+  const name  = document.getElementById('editName').value.trim();
+  const color = document.getElementById('editColor').value;
+  if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
+  fetch(`/api/trips/${editTripId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, color }) })
+    .then(() => { toast('✓ Ligne modifiée', 'ok'); admTab('lines'); });
+}
+
+function doDelete(id) {
+  if (!confirm('Supprimer cette ligne ?')) return;
+  fetch(`/api/trips/${id}`, { method:'DELETE' }).then(() => toast('Ligne supprimée'));
+}
+
+function startWpEdit(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t) return;
+  editTripId  = id;
+  wpPoints    = t.waypoints ? t.waypoints.map(p => [...p]) : [];
+  // Ferme l'admin (display:none immédiat)
+  document.getElementById('adminOverlay').classList.add('hidden');
+  // Passe en mode édition
+  wpActive = true;
+  map.getContainer().style.cursor = 'crosshair';
+  // Place les marqueurs existants sur la carte
+  clearWpMarkers();
+  wpPoints.forEach((p, i) => placeWpMarker(p[0], p[1], i, t.color));
+  drawWpPreview(t.color);
+  updateWpBar();
+  document.getElementById('wpBar').style.display = 'flex';
+  // Centre la vue
+  if (wpPoints.length >= 2) {
+    map.fitBounds(L.latLngBounds(wpPoints.map(p => L.latLng(p[0], p[1]))), { padding: [60, 60] });
+  }
+}
+
+/* ================================================================
+   WAYPOINTS
+================================================================ */
+function placeWpMarker(lat, lng, idx, color) {
+  color = color || (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
   const m = L.circleMarker([lat, lng], {
-    radius: 7, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1
+    radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1
   }).addTo(map);
   m.bindTooltip(`Point ${idx + 1}`, { direction: 'top' });
   m.on('contextmenu', () => {
@@ -647,68 +1174,132 @@ function placeWpMarker(lat, lng, idx) {
   wpMarkers.push(m);
 }
 
-function drawWpPreview() {
-  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
-  if (wpPoints.length >= 2) {
-    const color = document.getElementById('tColorIn').value;
-    wpPreview = L.polyline(wpPoints, { color, weight: 4, opacity: 0.7, dashArray: '8 5' }).addTo(map);
-  }
-}
-
-function clearWpMapMarkers() {
+function clearWpMarkers() {
   wpMarkers.forEach(m => map.removeLayer(m));
   wpMarkers = [];
   if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
 }
 
-function clearWaypoints() {
-  wpPoints = [];
-  clearWpMapMarkers();
-  renderWpList();
-}
-
-function renderWpList() {
-  const el = document.getElementById('wpList');
-  if (!wpPoints.length) {
-    el.innerHTML = '<div style="font-size:12px;color:var(--muted);padding:4px 0">No waypoints yet</div>';
-    return;
+function drawWpPreview(color) {
+  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
+  color = color || (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
+  if (wpPoints.length >= 2) {
+    wpPreview = L.polyline(wpPoints, { color, weight: 4, opacity: 0.7, dashArray: '8 5' }).addTo(map);
   }
-  el.innerHTML = wpPoints.map((p, i) => `
-    <div class="wp-item">
-      <span>📍 ${i + 1}: ${p[0].toFixed(5)}, ${p[1].toFixed(5)}</span>
-      <button class="wp-del" onclick="removeWpIdx(${i})">✕</button>
-    </div>`).join('');
-}
-
-function removeWpIdx(i) {
-  wpPoints.splice(i, 1);
-  if (wpActive) {
-    clearWpMapMarkers();
-    wpPoints.forEach((p, j) => placeWpMarker(p[0], p[1], j));
-    drawWpPreview();
-    updateWpBar();
-  }
-  renderWpList();
 }
 
 function updateWpBar() {
-  document.getElementById('wpBarInfo').textContent =
-    wpPoints.length ? `${wpPoints.length} point${wpPoints.length > 1 ? 's' : ''}` : '';
+  const n = wpPoints.length;
+  document.getElementById('wpBarInfo').textContent = n + ' point' + (n > 1 ? 's' : '');
 }
 
-/* ── HELPERS ─────────────────────────────────────── */
+function stopWp() {
+  wpActive = false;
+  map.getContainer().style.cursor = '';
+  document.getElementById('wpBar').style.display = 'none';
+  clearWpMarkers();
+}
+
+function cancelWp() {
+  stopWp();
+  openAdmin();
+  admTab('lines');
+}
+
+function saveWp() {
+  if (!editTripId) return;
+  if (wpPoints.length < 2) { toast('⚠️ Ajoutez au moins 2 points', 'err'); return; }
+  fetch(`/api/trips/${editTripId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ waypoints: wpPoints })
+  }).then(() => {
+    stopWp();
+    openAdmin();
+    admTab('lines');
+    toast('✓ Itinéraire sauvegardé', 'ok');
+  });
+}
+
+/* ================================================================
+   TABS (sidebar)
+================================================================ */
+function switchTab(tab) {
+  document.getElementById('tabLines').classList.toggle('active',   tab === 'lines');
+  document.getElementById('tabPax').classList.toggle('active',     tab === 'pax');
+  document.getElementById('tabLinesContent').classList.toggle('hidden', tab !== 'lines');
+  document.getElementById('tabPaxContent').classList.toggle('hidden',   tab !== 'pax');
+}
+
+/* ================================================================
+   MOBILE SHEET
+================================================================ */
+function toggleSheet() {
+  sheetUp = !sheetUp;
+  document.getElementById('mobSheet').classList.toggle('up', sheetUp);
+}
+
+/* ================================================================
+   HEADER SEARCH
+================================================================ */
+document.getElementById('hdrSearch').addEventListener('input', e => {
+  lineFilter = e.target.value;
+  renderLines();
+});
+
+/* ================================================================
+   TOAST
+================================================================ */
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'tOut .3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, 3000);
+}
+
+/* ================================================================
+   UPDATES
+================================================================ */
+function onTripsUpdated() {
+  drawRoutes();
+  renderLines();
+  renderJoinPicker();
+  renderAdmList();
+  refreshRip();
+}
+
+function onUsersUpdated() {
+  drawUsers();
+  renderPax();
+  renderLines();
+  refreshRip();
+}
+
+/* ================================================================
+   UTILS
+================================================================ */
 function esc(s) {
-  return String(s).replace(/[&<>"']/g, c =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
-}
-function shake(el) {
-  el.style.borderColor = 'var(--danger)';
-  el.focus();
-  setTimeout(() => { el.style.borderColor = ''; }, 2000);
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-/* ── BOOT ────────────────────────────────────────── */
-window.addEventListener('DOMContentLoaded', () => { initMap(); initSocket(); });
+function routeDist(wps) {
+  if (!wps || wps.length < 2) return 0;
+  let d = 0;
+  for (let i = 1; i < wps.length; i++) d += haversine(wps[i-1], wps[i]);
+  return d;
+}
+
+function haversine([lat1,lon1],[lat2,lon2]) {
+  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
 </script>
 </body>
 </html>
