@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
-    /* ── Variables ───────────────────────────────── */
     :root {
       --primary:       #1d4ed8;
       --primary-dark:  #1e3a8a;
@@ -20,7 +19,6 @@
       --danger:        #ef4444;
       --bg:            #f0f4ff;
       --card:          #ffffff;
-      --sidebar-bg:    #ffffff;
       --text:          #111827;
       --muted:         #6b7280;
       --border:        #e5e7eb;
@@ -28,359 +26,174 @@
       --shadow-lg:     0 10px 24px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
       --radius:        12px;
       --radius-sm:     8px;
-      --hh:            62px;
-      --sw:            380px;
       --ease:          .2s ease;
+      --hh:            62px;
+      --sw:            360px;
     }
 
-    /* ── Reset ───────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--bg); overflow: hidden; }
     button { cursor: pointer; border: none; background: none; font: inherit; }
-    input, select, textarea { font: inherit; }
-    a { text-decoration: none; }
+    input, select { font: inherit; }
     ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
 
-    /* ── App Shell ───────────────────────────────── */
+    /* App shell */
     .app { display: flex; flex-direction: column; height: 100vh; }
 
-    /* ── Header ──────────────────────────────────── */
+    /* Header */
     .hdr {
-      height: var(--hh);
-      background: var(--primary-dark);
+      height: var(--hh); background: var(--primary-dark);
       display: flex; align-items: center; gap: 14px; padding: 0 20px;
-      flex-shrink: 0; z-index: 200;
-      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+      flex-shrink: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,.3);
     }
     .hdr-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
-    .hdr-logo-icon {
-      width: 38px; height: 38px; border-radius: 10px;
-      background: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 20px;
-    }
-    .hdr-logo-text { line-height: 1; }
+    .hdr-logo-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 20px; }
     .hdr-logo-title { font-size: 16px; font-weight: 700; color: #fff; }
     .hdr-logo-sub   { font-size: 10px; color: rgba(255,255,255,.55); margin-top: 2px; }
-
-    .hdr-search {
-      flex: 1; max-width: 380px; position: relative;
-    }
-    .hdr-search svg {
-      position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
-      color: rgba(255,255,255,.45); pointer-events: none;
-    }
-    .hdr-search input {
-      width: 100%; padding: 8px 14px 8px 38px;
-      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2);
-      border-radius: 24px; color: #fff; font-size: 13px; outline: none; transition: var(--ease);
-    }
-    .hdr-search input::placeholder { color: rgba(255,255,255,.45); }
-    .hdr-search input:focus { background: rgba(255,255,255,.2); border-color: rgba(255,255,255,.4); }
-
     .hdr-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
-
-    .status-pill {
-      display: flex; align-items: center; gap: 7px;
-      padding: 5px 13px; background: rgba(255,255,255,.1); border-radius: 24px;
-      font-size: 12px; color: rgba(255,255,255,.8);
-    }
-    .status-dot {
-      width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; transition: var(--ease);
-    }
+    .status-pill { display: flex; align-items: center; gap: 7px; padding: 5px 13px; background: rgba(255,255,255,.1); border-radius: 24px; font-size: 12px; color: rgba(255,255,255,.8); }
+    .status-dot  { width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; transition: var(--ease); }
     .status-dot.on { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,.3); }
-
-    .count-pill {
-      display: flex; align-items: center; gap: 6px;
-      padding: 5px 13px; background: rgba(255,255,255,.1); border-radius: 24px;
-      font-size: 12px; color: rgba(255,255,255,.8);
-    }
-
-    .hdr-btn {
-      display: flex; align-items: center; gap: 7px;
-      padding: 7px 14px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22);
-      border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; transition: var(--ease);
-    }
+    .bus-pill { padding: 5px 13px; background: rgba(255,255,255,.1); border-radius: 24px; font-size: 12px; color: rgba(255,255,255,.8); }
+    .hdr-btn { display: flex; align-items: center; gap: 7px; padding: 7px 14px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; transition: var(--ease); }
     .hdr-btn:hover { background: rgba(255,255,255,.25); }
 
-    /* ── Main ────────────────────────────────────── */
+    /* Driver banner */
+    .driver-banner {
+      position: fixed; top: var(--hh); left: 0; right: 0;
+      background: var(--success); color: #fff;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      padding: 8px 16px; font-size: 13px; font-weight: 600; z-index: 800;
+    }
+    .driver-banner.hidden { display: none; }
+    .driver-stop-btn { padding: 3px 12px; background: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.4); border-radius: 6px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* Main */
     .main { display: flex; flex: 1; overflow: hidden; }
 
-    /* ── Sidebar ─────────────────────────────────── */
-    .sidebar {
-      width: var(--sw); background: var(--sidebar-bg);
-      border-right: 1px solid var(--border);
-      display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
-    }
-
-    /* Agency banner */
-    .agency {
-      padding: 14px 18px;
-      background: linear-gradient(135deg, var(--primary-dark) 0%, #2563eb 100%);
-      color: #fff; flex-shrink: 0;
-    }
-    .agency-name {
-      font-size: 13px; font-weight: 600;
-      display: flex; align-items: center; gap: 8px;
-    }
-    .agency-name::before {
-      content: ''; width: 8px; height: 8px;
-      background: var(--amber); border-radius: 50%; flex-shrink: 0;
-    }
+    /* Sidebar */
+    .sidebar { width: var(--sw); background: #fff; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+    .agency { padding: 14px 18px; background: linear-gradient(135deg, var(--primary-dark) 0%, #2563eb 100%); color: #fff; flex-shrink: 0; }
+    .agency-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .agency-name::before { content: ''; width: 8px; height: 8px; background: var(--amber); border-radius: 50%; flex-shrink: 0; }
     .agency-meta { font-size: 11px; color: rgba(255,255,255,.6); margin-top: 4px; }
 
-    /* Tabs */
-    .tab-bar { display: flex; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .tab-btn {
-      flex: 1; padding: 12px 8px; font-size: 12px; font-weight: 500; color: var(--muted);
-      border-bottom: 2px solid transparent; transition: var(--ease);
-      display: flex; align-items: center; justify-content: center; gap: 6px;
-    }
-    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
-    .tab-badge {
-      background: var(--primary); color: #fff;
-      font-size: 10px; font-weight: 700; padding: 1px 6px;
-      border-radius: 99px; min-width: 18px; text-align: center;
-    }
-
-    /* Tab content */
-    .tab-content { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
-    .tab-content.hidden { display: none; }
-
-    /* Search filter bar */
     .filter-bar { display: flex; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
     .filter-wrap { flex: 1; position: relative; }
     .filter-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
-    .filter-wrap input {
-      width: 100%; padding: 8px 12px 8px 34px;
-      background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; font-size: 13px; outline: none; transition: var(--ease);
-    }
+    .filter-wrap input { width: 100%; padding: 8px 12px 8px 34px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; transition: var(--ease); }
     .filter-wrap input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.1); }
-    .filter-chip {
-      display: flex; align-items: center; gap: 5px;
-      padding: 7px 12px; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 8px; font-size: 12px; font-weight: 500; color: var(--muted); transition: var(--ease); white-space: nowrap;
-    }
+    .filter-chip { display: flex; align-items: center; gap: 5px; padding: 7px 12px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; font-weight: 500; color: var(--muted); transition: var(--ease); white-space: nowrap; }
     .filter-chip:hover { border-color: var(--primary); color: var(--primary); }
     .filter-chip.on { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
 
-    /* Section label */
-    .section-hdr {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 10px 14px 6px;
-    }
+    .section-hdr { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px 6px; flex-shrink: 0; }
     .section-label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
     .section-count  { font-size: 11px; color: var(--muted); }
 
-    /* Route card */
-    .route-cards { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 6px; }
-    .route-card {
-      display: flex; background: var(--card); border: 1.5px solid var(--border);
-      border-radius: var(--radius-sm); cursor: pointer; transition: var(--ease); overflow: hidden;
-    }
+    /* Route cards */
+    .route-cards { padding: 0 10px 12px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; flex: 1; }
+    .route-card { display: flex; background: #fff; border: 1.5px solid var(--border); border-radius: var(--radius-sm); cursor: pointer; transition: var(--ease); overflow: hidden; }
     .route-card:hover  { border-color: var(--primary); box-shadow: var(--shadow); }
     .route-card.active { border-color: var(--primary); background: var(--primary-light); }
-
     .rc-strip { width: 5px; flex-shrink: 0; }
     .rc-body  { flex: 1; padding: 11px 12px; min-width: 0; }
-
     .rc-top { display: flex; align-items: flex-start; gap: 10px; }
-    .rc-num {
-      width: 28px; height: 28px; border-radius: 7px;
-      font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-    }
+    .rc-num { width: 28px; height: 28px; border-radius: 7px; font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
     .rc-meta { flex: 1; min-width: 0; }
     .rc-name  { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .rc-stops { font-size: 11px; color: var(--muted); margin-top: 2px; }
-
-    .rc-badges { display: flex; gap: 4px; flex-shrink: 0; }
-    .badge {
-      padding: 2px 7px; border-radius: 99px; font-size: 10px; font-weight: 600;
-    }
+    .rc-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .badge { padding: 2px 7px; border-radius: 99px; font-size: 10px; font-weight: 600; }
     .badge-on  { background: #d1fae5; color: #065f46; }
     .badge-off { background: #f3f4f6; color: #6b7280; }
-
-    .rc-foot {
-      display: flex; align-items: center; gap: 10px;
-      margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border);
-    }
+    .rc-foot { display: flex; align-items: center; gap: 10px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--border); }
     .rc-stat { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--muted); }
+    .view-btn { margin-left: auto; padding: 4px 11px; background: var(--primary); color: #fff; border-radius: 6px; font-size: 11px; font-weight: 600; transition: var(--ease); }
+    .view-btn:hover   { background: var(--primary-dark); }
+    .view-btn.sel { background: var(--success); }
 
-    .join-btn {
-      margin-left: auto; padding: 4px 11px;
-      background: var(--primary); color: #fff; border-radius: 6px;
-      font-size: 11px; font-weight: 600; transition: var(--ease);
-    }
-    .join-btn:hover   { background: var(--primary-dark); }
-    .join-btn.joined  { background: var(--success); }
-
-    /* User list */
-    .user-item {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 16px; border-bottom: 1px solid var(--border); transition: var(--ease);
-    }
-    .user-item:hover { background: var(--bg); }
-    .user-item.me    { background: var(--primary-light); }
-    .user-ava {
-      width: 38px; height: 38px; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 14px; font-weight: 700; color: #fff; flex-shrink: 0;
-    }
-    .user-info { flex: 1; min-width: 0; }
-    .user-name  { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .user-route { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .gps-pill { font-size: 10px; padding: 2px 8px; border-radius: 99px; }
-    .gps-on  { background: #d1fae5; color: #065f46; }
-    .gps-off { background: #f3f4f6; color: #6b7280; }
-
-    /* ── Map ─────────────────────────────────────── */
+    /* Map */
     .map-wrap { flex: 1; position: relative; overflow: hidden; }
     #map { width: 100%; height: 100%; }
-
-    .map-ctrl {
-      position: absolute; top: 14px; right: 14px;
-      display: flex; flex-direction: column; gap: 8px; z-index: 500;
-    }
-    .map-ctrl-btn {
-      width: 40px; height: 40px; background: #fff; border-radius: 10px;
-      box-shadow: var(--shadow-lg);
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-      transition: var(--ease);
-    }
+    .map-ctrl { position: absolute; top: 14px; right: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 500; }
+    .map-ctrl-btn { width: 40px; height: 40px; background: #fff; border-radius: 10px; box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: center; font-size: 18px; transition: var(--ease); }
     .map-ctrl-btn:hover { transform: scale(1.06); }
-    .map-ctrl-btn.on { background: var(--primary); }
 
-    /* Route Info Panel */
-    .rip {
-      position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%);
-      background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg);
-      padding: 14px 20px; display: flex; align-items: center; gap: 20px;
-      z-index: 500; min-width: 340px;
-      transition: opacity var(--ease), transform var(--ease);
-    }
-    .rip.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) translateY(14px); }
+    /* Route info panel */
+    .rip { position: absolute; bottom: 22px; left: 50%; transform: translateX(-50%); background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-lg); padding: 14px 20px; display: flex; align-items: center; gap: 20px; z-index: 500; min-width: 340px; }
+    .rip.hidden { display: none; }
     .rip-route { display: flex; align-items: center; gap: 10px; }
     .rip-dot   { width: 11px; height: 11px; border-radius: 50%; flex-shrink: 0; }
     .rip-lbl   { font-size: 11px; color: var(--muted); }
     .rip-val   { font-size: 14px; font-weight: 600; }
     .rip-div   { width: 1px; height: 34px; background: var(--border); flex-shrink: 0; }
     .rip-stat  { text-align: center; flex-shrink: 0; }
-    .rip-stat-n { font-size: 18px; font-weight: 700; color: var(--primary); line-height: 1; }
+    .rip-stat-n { font-size: 17px; font-weight: 700; color: var(--primary); line-height: 1; }
     .rip-stat-l { font-size: 10px; color: var(--muted); margin-top: 2px; }
-    .rip-close  { margin-left: auto; font-size: 16px; color: var(--muted); transition: var(--ease); padding: 4px; }
+    .rip-close  { margin-left: auto; font-size: 16px; color: var(--muted); padding: 4px; transition: var(--ease); }
     .rip-close:hover { color: var(--danger); }
 
-    /* ── Modals ──────────────────────────────────── */
-    .overlay {
-      position: fixed; inset: 0; background: rgba(15,23,42,.55);
-      backdrop-filter: blur(4px); z-index: 1000;
-      display: flex; align-items: center; justify-content: center; padding: 20px;
-    }
+    /* Modals */
+    .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .overlay.hidden { display: none; }
-
-    .modal {
-      background: var(--card); border-radius: 16px;
-      box-shadow: 0 24px 48px rgba(0,0,0,.22);
-      width: 100%; max-width: 500px; max-height: 90vh;
-      overflow: hidden; display: flex; flex-direction: column;
-    }
-    .modal.wide { max-width: 700px; }
-
-    .modal-hdr {
-      padding: 20px 22px 16px; border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; gap: 12px; flex-shrink: 0;
-    }
-    .modal-icon {
-      width: 44px; height: 44px; border-radius: 12px;
-      background: var(--primary-light); display: flex; align-items: center;
-      justify-content: center; font-size: 22px; flex-shrink: 0;
-    }
+    .modal { background: #fff; border-radius: 16px; box-shadow: 0 24px 48px rgba(0,0,0,.22); width: 100%; max-width: 520px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
+    .modal.wide { max-width: 680px; }
+    .modal-hdr { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+    .modal-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
     .modal-title    { font-size: 16px; font-weight: 700; }
     .modal-subtitle { font-size: 12px; color: var(--muted); margin-top: 2px; }
-    .modal-x {
-      margin-left: auto; width: 30px; height: 30px; border-radius: 7px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 17px; color: var(--muted); transition: var(--ease);
-    }
+    .modal-x { margin-left: auto; width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 17px; color: var(--muted); transition: var(--ease); }
     .modal-x:hover { background: var(--bg); color: var(--danger); }
     .modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
-    .modal-foot { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; gap: 10px; flex-shrink: 0; }
 
     /* Admin tabs */
-    .adm-tabs  { display: flex; gap: 4px; padding: 0 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .adm-tab   { padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; transition: var(--ease); }
+    .adm-tabs { display: flex; gap: 4px; padding: 0 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+    .adm-tab  { padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; transition: var(--ease); }
     .adm-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+    /* Admin trip list */
+    .adm-trip-list { display: flex; flex-direction: column; gap: 6px; }
+    .adm-trip { display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; }
+    .adm-trip-swatch { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
+    .adm-trip-info  { flex: 1; min-width: 120px; }
+    .adm-trip-name  { font-size: 13px; font-weight: 600; }
+    .adm-trip-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .adm-trip-acts  { display: flex; gap: 5px; flex-wrap: wrap; }
 
     /* Form */
     .fg { margin-bottom: 16px; }
     .fl { display: block; font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
-    .fi {
-      width: 100%; padding: 9px 13px; border: 1px solid var(--border);
-      border-radius: 8px; font-size: 13px; outline: none; background: var(--bg); transition: var(--ease);
-    }
+    .fi { width: 100%; padding: 9px 13px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--bg); transition: var(--ease); }
     .fi:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.1); background: #fff; }
+    .fi-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
 
     /* Buttons */
-    .btn {
-      padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600;
-      display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: var(--ease);
-    }
+    .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: var(--ease); }
     .btn-primary   { background: var(--primary); color: #fff; }
     .btn-primary:hover { background: var(--primary-dark); }
     .btn-secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
     .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
     .btn-danger    { background: var(--danger); color: #fff; }
-    .btn-danger:hover  { background: #dc2626; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-success   { background: var(--success); color: #fff; }
     .btn-sm { padding: 5px 11px; font-size: 12px; }
-    .btn-full { width: 100%; flex: 1; }
-
-    /* Trip picker (join modal) */
-    .trip-picker { display: flex; flex-direction: column; gap: 8px; }
-    .trip-opt {
-      display: flex; align-items: center; gap: 12px; padding: 13px;
-      border: 2px solid var(--border); border-radius: 10px; cursor: pointer; transition: var(--ease);
-    }
-    .trip-opt:hover   { border-color: var(--primary); background: var(--primary-light); }
-    .trip-opt.sel     { border-color: var(--primary); background: var(--primary-light); }
-    .trip-opt-icon    { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
-    .trip-opt-info    { flex: 1; }
-    .trip-opt-name    { font-size: 13px; font-weight: 600; }
-    .trip-opt-meta    { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .trip-opt-check   { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: transparent; transition: var(--ease); flex-shrink: 0; }
-    .trip-opt.sel .trip-opt-check { background: var(--primary); border-color: var(--primary); color: #fff; }
-
-    /* Admin trip list */
-    .adm-trip-list { display: flex; flex-direction: column; gap: 6px; }
-    .adm-trip {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 13px; background: var(--bg);
-      border-radius: 8px; border: 1px solid var(--border);
-    }
-    .adm-trip-swatch { width: 30px; height: 30px; border-radius: 7px; flex-shrink: 0; }
-    .adm-trip-info  { flex: 1; min-width: 0; }
-    .adm-trip-name  { font-size: 13px; font-weight: 600; }
-    .adm-trip-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .adm-trip-acts  { display: flex; gap: 5px; }
 
     /* Leaflet tooltip */
     .leaflet-tooltip { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 12px; border-radius: 6px; }
     .leaflet-tooltip-top::before { border-top-color: #334155; }
+    .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--shadow-lg); }
+    .lpop { font-family: 'Inter', sans-serif; font-size: 13px; }
+    .lpop-n { font-weight: 700; margin-bottom: 3px; }
+    .lpop-r { color: var(--muted); font-size: 12px; }
 
     /* Toast */
     .toast-wrap { position: fixed; top: 76px; right: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
-    .toast {
-      padding: 11px 16px; background: #fff; border-radius: 10px;
-      box-shadow: var(--shadow-lg); font-size: 13px; font-weight: 500;
-      display: flex; align-items: center; gap: 9px;
-      border-left: 4px solid var(--primary); max-width: 280px;
-      animation: tIn .3s ease;
-    }
+    .toast { padding: 11px 16px; background: #fff; border-radius: 10px; box-shadow: var(--shadow-lg); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 9px; border-left: 4px solid var(--primary); max-width: 280px; animation: tIn .3s ease; }
     .toast.ok  { border-left-color: var(--success); }
     .toast.err { border-left-color: var(--danger); }
     @keyframes tIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes tOut { from { transform: translateX(0);    opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+    @keyframes tOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
 
     /* Empty state */
     .empty { padding: 36px 20px; text-align: center; }
@@ -388,61 +201,36 @@
     .empty-ttl { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
     .empty-dsc { font-size: 12px; color: var(--muted); }
 
-    /* ── Mobile bottom sheet ─────────────────────── */
-    .mob-sheet {
-      display: none; position: fixed; bottom: 0; left: 0; right: 0;
-      background: #fff; border-radius: 18px 18px 0 0;
-      box-shadow: 0 -4px 24px rgba(0,0,0,.14);
-      z-index: 600; transform: translateY(calc(100% - 118px));
-      transition: transform .3s cubic-bezier(.32,.72,0,1);
-      max-height: 75vh;
-    }
+    /* Mobile bottom sheet */
+    .mob-sheet { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 24px rgba(0,0,0,.14); z-index: 600; transform: translateY(calc(100% - 110px)); transition: transform .3s cubic-bezier(.32,.72,0,1); max-height: 75vh; }
     .mob-sheet.up { transform: translateY(0); }
     .mob-sheet-handle { display: flex; justify-content: center; padding: 12px; cursor: pointer; }
     .mob-sheet-bar { width: 36px; height: 4px; background: #d1d5db; border-radius: 99px; }
     .mob-sheet-body { overflow-y: auto; max-height: calc(75vh - 52px); padding-bottom: 16px; }
-    .mob-sheet-peek { padding: 0 16px 12px; }
+    .mob-peek { padding: 0 16px 12px; }
     .mob-peek-title { font-size: 14px; font-weight: 700; }
     .mob-peek-sub   { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-    /* Mobile FABs */
-    .fab-wrap { display: none; position: fixed; bottom: 134px; right: 16px; z-index: 700; flex-direction: column; gap: 10px; }
-    .fab {
-      width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff;
-      box-shadow: 0 4px 16px rgba(29,78,216,.4);
-      display: flex; align-items: center; justify-content: center; font-size: 20px; transition: var(--ease);
-    }
+    /* Mobile FAB */
+    .fab-wrap { display: none; position: fixed; bottom: 124px; right: 16px; z-index: 700; }
+    .fab { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; box-shadow: 0 4px 16px rgba(29,78,216,.4); display: flex; align-items: center; justify-content: center; font-size: 22px; transition: var(--ease); border: none; cursor: pointer; }
     .fab:hover { transform: scale(1.08); }
-    .fab.white { background: #fff; color: var(--primary); box-shadow: var(--shadow-lg); }
 
-    /* Leaflet custom */
-    .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--shadow-lg); }
-    .lpop { font-family: 'Inter', sans-serif; font-size: 13px; }
-    .lpop-n { font-weight: 700; margin-bottom: 3px; }
-    .lpop-r { color: var(--muted); font-size: 12px; }
-
-    /* ── Responsive ──────────────────────────────── */
+    /* Responsive */
     @media (max-width: 768px) {
-      .sidebar      { display: none; }
-      .mob-sheet    { display: block; }
-      .fab-wrap     { display: flex; }
-      .hdr-search   { display: none; }
-      .hdr-logo-sub { display: none; }
-      .rip {
-        min-width: 0; left: 12px; right: 12px; transform: none;
-        bottom: 128px; flex-wrap: wrap; gap: 12px;
-      }
-      .rip.hidden   { transform: translateY(12px); }
-      .map-ctrl     { top: 76px; }
-      .modal        { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 95vh; }
-      .overlay      { align-items: flex-end; padding: 0; }
+      .sidebar   { display: none; }
+      .mob-sheet { display: block; }
+      .fab-wrap  { display: flex; }
+      .rip { min-width: 0; left: 12px; right: 12px; transform: none; bottom: 120px; flex-wrap: wrap; gap: 12px; }
+      .map-ctrl { top: 76px; }
+      .modal { max-width: 100%; border-radius: 16px 16px 0 0; max-height: 95vh; }
+      .overlay { align-items: flex-end; padding: 0; }
     }
     @media (max-width: 480px) {
       .hdr { padding: 0 14px; gap: 10px; }
-      .count-pill { display: none; }
+      .bus-pill { display: none; }
     }
 
-    /* Util */
     .hidden { display: none !important; }
   </style>
 </head>
@@ -450,31 +238,21 @@
 <body>
 <div class="app">
 
-  <!-- ── Header ─────────────────────────────────────────── -->
+  <!-- Header -->
   <header class="hdr">
     <div class="hdr-logo">
       <div class="hdr-logo-icon">🚌</div>
-      <div class="hdr-logo-text">
+      <div>
         <div class="hdr-logo-title">MG Tracker</div>
         <div class="hdr-logo-sub">Yaoundé · Cameroun</div>
       </div>
     </div>
-
-    <div class="hdr-search">
-      <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-      </svg>
-      <input id="hdrSearch" type="text" placeholder="Rechercher une ligne ou un arrêt…" />
-    </div>
-
     <div class="hdr-right">
       <div class="status-pill">
         <span class="status-dot" id="statusDot"></span>
         <span id="statusTxt">Connexion…</span>
       </div>
-      <div class="count-pill">
-        👥 <span id="hdrCount">0</span> en ligne
-      </div>
+      <div class="bus-pill">🚌 <span id="busCount">0</span> bus actif</div>
       <button class="hdr-btn" onclick="openAdmin()">
         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
         Admin
@@ -482,7 +260,13 @@
     </div>
   </header>
 
-  <!-- ── Main ───────────────────────────────────────────── -->
+  <!-- Driver banner -->
+  <div class="driver-banner hidden" id="driverBanner">
+    🚗 Mode Conducteur actif &mdash; <span id="driverInfo"></span>
+    <button class="driver-stop-btn" onclick="stopDriver()">Arrêter</button>
+  </div>
+
+  <!-- Main -->
   <div class="main">
 
     <!-- Sidebar -->
@@ -491,49 +275,28 @@
         <div class="agency-name">Mekalfone Transport</div>
         <div class="agency-meta">Réseau de transport urbain · Yaoundé, Cameroun</div>
       </div>
-
-      <div class="tab-bar">
-        <button class="tab-btn active" id="tabLines" onclick="switchTab('lines')">
-          🚌 Lignes <span class="tab-badge" id="badgeLines">0</span>
-        </button>
-        <button class="tab-btn" id="tabPax" onclick="switchTab('pax')">
-          👥 Passagers <span class="tab-badge" id="badgePax">0</span>
-        </button>
-      </div>
-
-      <!-- Lines tab -->
-      <div class="tab-content" id="tabLinesContent">
-        <div class="filter-bar">
-          <div class="filter-wrap">
-            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
-              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-            </svg>
-            <input id="lineSearch" type="text" placeholder="Filtrer les lignes…" oninput="filterLines(this.value)" />
-          </div>
-          <button class="filter-chip" id="filterActive" onclick="toggleActiveFilter()">● Actives</button>
+      <div class="filter-bar">
+        <div class="filter-wrap">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd"/>
+          </svg>
+          <input type="text" placeholder="Filtrer les lignes…" oninput="filterLines(this.value)" />
         </div>
-        <div class="section-hdr">
-          <span class="section-label">Lignes disponibles</span>
-          <span class="section-count" id="lineCount">0</span>
-        </div>
-        <div class="route-cards" id="lineList"></div>
+        <button class="filter-chip" id="filterActive" onclick="toggleActiveFilter()">● Actives</button>
       </div>
-
-      <!-- Passengers tab -->
-      <div class="tab-content hidden" id="tabPaxContent">
-        <div id="paxList"></div>
+      <div class="section-hdr">
+        <span class="section-label">Lignes disponibles</span>
+        <span class="section-count" id="lineCount">0</span>
       </div>
+      <div class="route-cards" id="lineList"></div>
     </aside>
 
     <!-- Map -->
     <div class="map-wrap">
       <div id="map"></div>
-
       <div class="map-ctrl">
-        <button class="map-ctrl-btn" id="locateBtn" title="Me localiser" onclick="locateMe()">📍</button>
-        <button class="map-ctrl-btn" id="followBtn" title="Suivre ma position" onclick="toggleFollow()">🎯</button>
+        <button class="map-ctrl-btn" onclick="centerOnTrip()" title="Centrer sur la ligne sélectionnée">🎯</button>
       </div>
-
       <!-- Route info panel -->
       <div class="rip hidden" id="rip">
         <div class="rip-route">
@@ -544,14 +307,24 @@
           </div>
         </div>
         <div class="rip-div"></div>
-        <div class="rip-stat"><div class="rip-stat-n" id="ripPax">0</div><div class="rip-stat-l">passagers</div></div>
+        <div class="rip-stat">
+          <div class="rip-stat-n" id="ripBus" style="font-size:12px;max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">–</div>
+          <div class="rip-stat-l">véhicule</div>
+        </div>
         <div class="rip-div"></div>
-        <div class="rip-stat"><div class="rip-stat-n" id="ripEta">–</div><div class="rip-stat-l">min estimés</div></div>
+        <div class="rip-stat">
+          <div class="rip-stat-n" id="ripStops">–</div>
+          <div class="rip-stat-l">arrêts</div>
+        </div>
         <div class="rip-div"></div>
-        <div class="rip-stat"><div class="rip-stat-n" id="ripDist">–</div><div class="rip-stat-l">km</div></div>
+        <div class="rip-stat">
+          <div class="rip-stat-n" id="ripDist">–</div>
+          <div class="rip-stat-l">km</div>
+        </div>
         <button class="rip-close" onclick="hideRip()">✕</button>
       </div>
     </div>
+
   </div><!-- /.main -->
 
   <!-- Mobile bottom sheet -->
@@ -559,94 +332,62 @@
     <div class="mob-sheet-handle" onclick="toggleSheet()">
       <div class="mob-sheet-bar"></div>
     </div>
-    <div class="mob-sheet-peek" id="mobPeek">
+    <div class="mob-peek" id="mobPeek">
       <div class="mob-peek-title" id="mobPeekTitle">Lignes disponibles</div>
-      <div class="mob-peek-sub" id="mobPeekSub">Appuyez pour voir toutes les lignes</div>
+      <div class="mob-peek-sub"   id="mobPeekSub">Appuyez pour voir toutes les lignes</div>
     </div>
     <div class="mob-sheet-body">
-      <div style="padding:0 12px 8px;">
-        <div id="mobLineList"></div>
-      </div>
+      <div style="padding:0 12px 8px;" id="mobLineList"></div>
     </div>
   </div>
 
-  <!-- Mobile FABs -->
+  <!-- Mobile FAB -->
   <div class="fab-wrap">
-    <button class="fab white" onclick="locateMe()" title="Me localiser">📍</button>
     <button class="fab" onclick="toggleSheet()" title="Lignes">🚌</button>
   </div>
 
 </div><!-- /.app -->
 
-<!-- Toast container -->
+<!-- Toast -->
 <div class="toast-wrap" id="toasts"></div>
 
-<!-- ── WAYPOINT BAR (affiché en bas de la carte pendant l'édition) -->
-<div id="wpBar" style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%);
-  background:#1e3a8a; color:#fff; border-radius:12px; padding:12px 20px;
-  display:none; align-items:center; gap:14px; z-index:1500;
-  box-shadow:0 4px 24px rgba(0,0,0,.4); font-size:13px; white-space:nowrap;">
-  <span style="opacity:.8;">📍 Cliquez sur la carte pour ajouter des points · Clic droit sur un point pour le supprimer</span>
-  <span id="wpBarInfo" style="background:rgba(255,255,255,.15); padding:3px 10px; border-radius:99px; font-size:12px; font-weight:600;"></span>
-  <button onclick="saveWp()"   style="background:#10b981;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">💾 Sauvegarder</button>
-  <button onclick="cancelWp()" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">✕ Annuler</button>
+<!-- Edit bar (route waypoints or stop points) -->
+<div id="wpBar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1e3a8a;color:#fff;border-radius:12px;padding:12px 20px;
+  align-items:center;gap:14px;z-index:1500;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);font-size:13px;white-space:nowrap;">
+  <span id="wpBarLabel" style="opacity:.8;"></span>
+  <span id="wpBarInfo" style="background:rgba(255,255,255,.15);padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;"></span>
+  <button onclick="onBarSave()"   style="background:#10b981;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">💾 Sauvegarder</button>
+  <button onclick="onBarCancel()" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">✕ Annuler</button>
 </div>
 
-<!-- ── JOIN OVERLAY ───────────────────────────────────── -->
-<div class="overlay hidden" id="joinOverlay">
-  <div class="modal">
-    <div class="modal-hdr">
-      <div class="modal-icon">🚌</div>
-      <div>
-        <div class="modal-title">Rejoindre MG Tracker</div>
-        <div class="modal-subtitle">Suivez votre bus en temps réel · Yaoundé</div>
-      </div>
-    </div>
-    <div class="modal-body">
-      <div class="fg">
-        <label class="fl">Votre nom complet</label>
-        <input class="fi" id="nameInput" type="text" placeholder="Ex: Jean Dupont" maxlength="30" />
-      </div>
-      <div class="fg" style="margin-bottom:0;">
-        <label class="fl">Choisissez votre ligne</label>
-        <div class="trip-picker" id="joinPicker"></div>
-      </div>
-    </div>
-    <div class="modal-foot">
-      <button class="btn btn-primary btn-full" onclick="doJoin()">
-        🚀 Rejoindre le suivi
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- ── ADMIN OVERLAY ──────────────────────────────────── -->
+<!-- Admin overlay -->
 <div class="overlay hidden" id="adminOverlay">
   <div class="modal wide">
     <div class="modal-hdr">
       <div class="modal-icon">⚙️</div>
       <div>
         <div class="modal-title">Tableau de bord Administrateur</div>
-        <div class="modal-subtitle">Gestion des lignes et des itinéraires</div>
+        <div class="modal-subtitle">Gestion des lignes, véhicules et arrêts</div>
       </div>
       <button class="modal-x" onclick="closeAdmin()">✕</button>
     </div>
 
     <div class="adm-tabs">
       <button class="adm-tab active" id="admTabLines" onclick="admTab('lines')">📋 Lignes</button>
-      <button class="adm-tab" id="admTabEdit"  onclick="admTab('edit')">✏️ Modifier</button>
+      <button class="adm-tab"        id="admTabEdit"  onclick="admTab('edit')">✏️ Modifier</button>
     </div>
 
-    <div class="modal-body" id="admBody">
+    <div class="modal-body">
 
-      <!-- Lines tab -->
+      <!-- Lignes tab -->
       <div id="admLines">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <span style="font-size:12px;color:var(--muted);">Gérez les lignes et leurs itinéraires</span>
+          <span style="font-size:12px;color:var(--muted);">Gérez les lignes, véhicules et points d'arrêt</span>
           <button class="btn btn-primary btn-sm" onclick="showAddForm()">+ Nouvelle ligne</button>
         </div>
         <div class="adm-trip-list" id="admTripList"></div>
-
         <div class="hidden" id="addForm" style="margin-top:14px;padding:14px;background:var(--bg);border:1.5px dashed var(--border);border-radius:8px;">
           <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Nouvelle ligne</div>
           <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:12px;">
@@ -676,52 +417,64 @@
           <label class="fl">Couleur</label>
           <input type="color" class="fi" id="editColor" value="#3b82f6" style="height:42px;padding:4px 6px;cursor:pointer;" />
         </div>
+        <div class="fg">
+          <label class="fl">Matricule du véhicule</label>
+          <input class="fi" id="editMatricule" placeholder="Ex: DL-1234-A (laisser vide = inactif)" />
+          <div class="fi-note">Le véhicule assigné sera suivi en temps réel sur la carte.</div>
+        </div>
         <div style="display:flex;gap:8px;margin-top:6px;">
           <button class="btn btn-primary" onclick="doSaveEdit()">💾 Enregistrer</button>
           <button class="btn btn-secondary" onclick="admTab('lines')">Annuler</button>
         </div>
       </div>
 
-    </div><!-- /#admBody -->
+    </div>
   </div>
 </div>
 
-<!-- Scripts -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
 /* ================================================================
    STATE
 ================================================================ */
-let myId       = null;
-let hasJoined  = false;
-let trips      = [];
-let users      = {};
-let tripLayers = {};   // trip_id → L.LayerGroup
-let userMarks  = {};   // user_id → L.Marker
+let trips        = [];
+let busPositions = {};   // {trip_id: {lat, lng, matricule, timestamp}}
+let selTripId    = null;
+
+let routeLayer   = null; // L.LayerGroup for selected trip
+let busMarker    = null; // L.Marker for selected trip's bus
+
+// Waypoint editor (route points)
 let wpActive   = false;
 let wpPoints   = [];
-let wpMarkers  = [];   // Leaflet circleMarkers sur la carte
+let wpMarkers  = [];
 let wpPreview  = null;
-let autoFollow = false;
-let geoWatch   = null;
 let editTripId = null;
-let selTripId  = null;
+
+// Stop points editor
+let spActive  = false;
+let spPoints  = [];   // [{name, lat, lng}]
+let spMarkers = [];
+
+// Driver mode
+let drivingMatricule = null;
+let drivingTripId    = null;
+let driverWatch      = null;
+
 let lineFilter = '';
 let activeOnly = false;
-let selJoinId  = null;
 let sheetUp    = false;
 
 /* ================================================================
    SOCKET
 ================================================================ */
 const socket = io();
-
-socket.on('connect',       ()  => setConnected(true));
-socket.on('disconnect',    ()  => { setConnected(false); stopGeo(); });
-socket.on('user_id',       d   => { myId = d.id; autoRejoin(); });
-socket.on('trips_updated', d   => { trips = d; onTripsUpdated(); });
-socket.on('users_updated', d   => { users = {}; d.forEach(u => users[u.id] = u); onUsersUpdated(); });
+socket.on('connect',              ()  => setConnected(true));
+socket.on('disconnect',           ()  => setConnected(false));
+socket.on('trips_updated',        d   => { trips = d; onTripsUpdated(); });
+socket.on('bus_positions_updated',d   => { busPositions = d; onBusesUpdated(); });
+socket.on('bus_error',            d   => toast('❌ ' + d.message, 'err'));
 
 /* ================================================================
    CONNECTION STATUS
@@ -742,117 +495,88 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
 map.on('click', e => {
-  if (!wpActive) return;
-  const lat = e.latlng.lat, lng = e.latlng.lng;
-  wpPoints.push([lat, lng]);
-  placeWpMarker(lat, lng, wpPoints.length - 1);
-  drawWpPreview();
-  updateWpBar();
+  if (wpActive) {
+    const { lat, lng } = e.latlng;
+    wpPoints.push([lat, lng]);
+    placeWpMarker(lat, lng, wpPoints.length - 1);
+    drawWpPreview();
+    updateBar();
+  } else if (spActive) {
+    const name = prompt('Nom de cet arrêt :');
+    if (!name || !name.trim()) return;
+    const { lat, lng } = e.latlng;
+    spPoints.push({ name: name.trim(), lat, lng });
+    placeSpMarker(name.trim(), lat, lng, spPoints.length - 1);
+    updateBar();
+  }
 });
 
 /* ================================================================
-   ROUTES ON MAP
+   SELECTED TRIP RENDERING
 ================================================================ */
-function drawRoutes() {
-  Object.values(tripLayers).forEach(g => g.clearLayers());
-  tripLayers = {};
+function renderSelectedTrip() {
+  // Clear previous
+  if (routeLayer) { routeLayer.clearLayers(); map.removeLayer(routeLayer); routeLayer = null; }
+  if (busMarker)  { map.removeLayer(busMarker); busMarker = null; }
 
-  trips.forEach(trip => {
-    const g = L.layerGroup().addTo(map);
-    tripLayers[trip.id] = g;
-    const wps = trip.waypoints || [];
-    if (wps.length < 2) return;
+  const trip = trips.find(t => t.id === selTripId);
+  if (!trip) return;
 
-    const poly = L.polyline(wps, { color: trip.color, weight: 4, opacity: .85 }).addTo(g);
-    poly.bindTooltip(`<b>${esc(trip.name)}</b>`, { sticky: true });
-    poly.on('click', () => showRip(trip));
+  routeLayer = L.layerGroup().addTo(map);
 
-    L.marker(wps[0],           { icon: routePin(trip.color, '🚌') }).addTo(g)
-     .bindPopup(`<div class="lpop"><div class="lpop-n">Départ</div><div class="lpop-r">${esc(trip.name)}</div></div>`);
-    L.marker(wps[wps.length-1],{ icon: routePin(trip.color, '🏁') }).addTo(g)
-     .bindPopup(`<div class="lpop"><div class="lpop-n">Arrivée</div><div class="lpop-r">${esc(trip.name)}</div></div>`);
+  // Route polyline
+  const wps = trip.waypoints || [];
+  if (wps.length >= 2) {
+    L.polyline(wps, { color: trip.color, weight: 5, opacity: 0.85 }).addTo(routeLayer);
+    L.marker(wps[0],            { icon: routePin(trip.color, '🚌') }).addTo(routeLayer)
+      .bindPopup('<div class="lpop"><div class="lpop-n">Départ</div><div class="lpop-r">' + esc(trip.name) + '</div></div>');
+    L.marker(wps[wps.length-1], { icon: routePin(trip.color, '🏁') }).addTo(routeLayer)
+      .bindPopup('<div class="lpop"><div class="lpop-n">Terminus</div><div class="lpop-r">' + esc(trip.name) + '</div></div>');
+  }
+
+  // Stop markers
+  (trip.stops || []).forEach((s, i) => {
+    const icon = L.divIcon({
+      className: '',
+      html: '<div style="width:22px;height:22px;background:#fff;border:3px solid ' + trip.color + ';' +
+            'border-radius:50%;display:flex;align-items:center;justify-content:center;' +
+            'font-size:10px;font-weight:700;color:' + trip.color + ';box-shadow:0 1px 4px rgba(0,0,0,.25);">' + (i+1) + '</div>',
+      iconSize: [22,22], iconAnchor: [11,11]
+    });
+    L.marker([s.lat, s.lng], { icon }).addTo(routeLayer)
+      .bindTooltip('<b>' + (i+1) + '. ' + esc(s.name) + '</b>', { direction: 'top' });
   });
+
+  // Bus marker
+  const pos = busPositions[trip.id];
+  if (pos && pos.lat && pos.lng) {
+    const busIcon = L.divIcon({
+      className: '',
+      html: '<div style="width:42px;height:42px;background:' + trip.color + ';border:3px solid #fff;' +
+            'border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;' +
+            'box-shadow:0 0 0 4px ' + trip.color + '44,0 2px 10px rgba(0,0,0,.35);">🚌</div>',
+      iconSize: [42,42], iconAnchor: [21,21]
+    });
+    busMarker = L.marker([pos.lat, pos.lng], { icon: busIcon, zIndexOffset: 1000 })
+      .addTo(map)
+      .bindPopup('<div class="lpop"><div class="lpop-n">🚌 ' + esc(trip.name) + '</div>' +
+                 '<div class="lpop-r">Matricule : ' + esc(pos.matricule) + '</div></div>');
+  }
+}
+
+function centerOnTrip() {
+  const trip = trips.find(t => t.id === selTripId);
+  if (!trip || !(trip.waypoints || []).length) return;
+  map.fitBounds(L.latLngBounds(trip.waypoints.map(w => L.latLng(w[0], w[1]))), { padding: [50, 50] });
 }
 
 function routePin(color, emoji) {
   return L.divIcon({
     className: '',
-    html: `<div style="width:32px;height:32px;border-radius:50%;background:${color};border:3px solid #fff;
-      box-shadow:0 2px 8px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:14px;">${emoji}</div>`,
+    html: '<div style="width:32px;height:32px;border-radius:50%;background:' + color + ';border:3px solid #fff;' +
+          'box-shadow:0 2px 8px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:14px;">' + emoji + '</div>',
     iconSize: [32,32], iconAnchor: [16,16]
   });
-}
-
-/* ================================================================
-   USER MARKERS
-================================================================ */
-function drawUsers() {
-  // remove stale
-  Object.keys(userMarks).forEach(uid => {
-    if (!users[uid]) { map.removeLayer(userMarks[uid]); delete userMarks[uid]; }
-  });
-
-  Object.values(users).forEach(u => {
-    if (!u.lat || !u.lng) return;
-    const trip  = trips.find(t => t.id === u.trip_id);
-    const color = trip ? trip.color : '#6b7280';
-    const isMe  = u.id === myId;
-    const ini   = (u.username || '?').charAt(0).toUpperCase();
-    const icon  = userPin(color, ini, isMe);
-    const popup = `<div class="lpop"><div class="lpop-n">${esc(u.username)}${isMe?' (vous)':''}</div><div class="lpop-r">${trip ? esc(trip.name) : 'Ligne inconnue'}</div></div>`;
-
-    if (userMarks[u.id]) {
-      userMarks[u.id].setLatLng([u.lat, u.lng]).setIcon(icon);
-    } else {
-      userMarks[u.id] = L.marker([u.lat, u.lng], { icon }).addTo(map).bindPopup(popup);
-    }
-  });
-
-  if (autoFollow && myId && users[myId]?.lat) {
-    map.setView([users[myId].lat, users[myId].lng]);
-  }
-}
-
-function userPin(color, letter, isMe) {
-  const sz  = isMe ? 44 : 36;
-  const shd = isMe
-    ? `box-shadow:0 0 0 3px ${color}55,0 2px 8px rgba(0,0,0,.3);`
-    : `box-shadow:0 2px 6px rgba(0,0,0,.22);`;
-  return L.divIcon({
-    className: '',
-    html: `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${color};border:2px solid #fff;
-      ${shd}display:flex;align-items:center;justify-content:center;
-      font-size:${isMe?16:13}px;font-weight:700;color:#fff;font-family:'Inter',sans-serif;">${letter}</div>`,
-    iconSize: [sz,sz], iconAnchor: [sz/2,sz/2]
-  });
-}
-
-/* ================================================================
-   ROUTE INFO PANEL
-================================================================ */
-function showRip(trip) {
-  selTripId = trip.id;
-  document.getElementById('ripDot').style.background  = trip.color;
-  document.getElementById('ripName').textContent       = trip.name;
-  refreshRip();
-  document.getElementById('rip').classList.remove('hidden');
-}
-
-function hideRip() {
-  document.getElementById('rip').classList.add('hidden');
-  selTripId = null;
-}
-
-function refreshRip() {
-  if (!selTripId) return;
-  const trip = trips.find(t => t.id === selTripId);
-  if (!trip) return;
-  const pax  = Object.values(users).filter(u => u.trip_id === selTripId).length;
-  const dist = routeDist(trip.waypoints);
-  const eta  = Math.round(dist / 0.333); // ~20 km/h
-  document.getElementById('ripPax').textContent  = pax;
-  document.getElementById('ripDist').textContent = dist.toFixed(1);
-  document.getElementById('ripEta').textContent  = eta || '–';
 }
 
 /* ================================================================
@@ -861,77 +585,51 @@ function refreshRip() {
 function renderLines() {
   let list = trips;
   if (lineFilter) list = list.filter(t => t.name.toLowerCase().includes(lineFilter.toLowerCase()));
-  if (activeOnly) list = list.filter(t => Object.values(users).some(u => u.trip_id === t.id));
+  if (activeOnly) list = list.filter(t => t.matricule);
 
-  document.getElementById('lineCount').textContent  = list.length + ' ligne' + (list.length !== 1 ? 's' : '');
-  document.getElementById('badgeLines').textContent = trips.length;
-
-  const myTripId = myId && users[myId] ? users[myId].trip_id : null;
+  document.getElementById('lineCount').textContent = list.length + ' ligne' + (list.length !== 1 ? 's' : '');
 
   const html = list.length ? list.map((t, i) => {
-    const pax   = Object.values(users).filter(u => u.trip_id === t.id).length;
-    const dist  = routeDist(t.waypoints);
-    const stops = (t.waypoints || []).length;
-    const on    = pax > 0;
-    const isMy  = t.id === myTripId;
+    const dist    = routeDist(t.waypoints);
+    const stops   = (t.stops || []).length;
+    const hasBus  = !!busPositions[t.id];
+    const isSel   = t.id === selTripId;
+    const matBadge = t.matricule
+      ? '<span class="badge badge-on">🚌 ' + esc(t.matricule) + '</span>'
+      : '<span class="badge badge-off">○ Inactif</span>';
 
-    return `<div class="route-card${isMy?' active':''}" onclick="selectLine('${t.id}')">
-      <div class="rc-strip" style="background:${t.color}"></div>
-      <div class="rc-body">
-        <div class="rc-top">
-          <div class="rc-num" style="background:${t.color}">${i+1}</div>
-          <div class="rc-meta">
-            <div class="rc-name">${esc(t.name)}</div>
-            <div class="rc-stops">${stops} arrêts · ${dist.toFixed(1)} km</div>
-          </div>
-          <div class="rc-badges">
-            <span class="badge ${on?'badge-on':'badge-off'}">${on?'● Actif':'○ Vide'}</span>
-          </div>
-        </div>
-        <div class="rc-foot">
-          <span class="rc-stat">👥 ${pax} passager${pax!==1?'s':''}</span>
-          <span class="rc-stat">📍 ${stops} pts</span>
-          <button class="join-btn${isMy?' joined':''}"
-            onclick="event.stopPropagation();joinLine('${t.id}')">
-            ${isMy ? '✓ Ma ligne' : 'Rejoindre'}
-          </button>
-        </div>
-      </div>
-    </div>`;
-  }).join('') : `<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">Aucune ligne trouvée</div><div class="empty-dsc">Modifiez votre recherche</div></div>`;
+    return '<div class="route-card' + (isSel ? ' active' : '') + '" onclick="selectTrip(\'' + t.id + '\')">' +
+      '<div class="rc-strip" style="background:' + t.color + '"></div>' +
+      '<div class="rc-body">' +
+        '<div class="rc-top">' +
+          '<div class="rc-num" style="background:' + t.color + '">' + (i+1) + '</div>' +
+          '<div class="rc-meta">' +
+            '<div class="rc-name">' + esc(t.name) + '</div>' +
+            '<div class="rc-sub">' + stops + ' arrêts · ' + dist.toFixed(1) + ' km</div>' +
+          '</div>' +
+          '<div style="flex-shrink:0;">' + matBadge + '</div>' +
+        '</div>' +
+        '<div class="rc-foot">' +
+          '<span class="rc-stat">📍 ' + (t.waypoints || []).length + ' pts</span>' +
+          '<span class="rc-stat">🚏 ' + stops + ' arrêts</span>' +
+          (hasBus ? '<span class="rc-stat" style="color:var(--success);font-weight:600;">● En service</span>' : '') +
+          '<button class="view-btn' + (isSel ? ' sel' : '') + '" onclick="event.stopPropagation();selectTrip(\'' + t.id + '\')">' +
+            (isSel ? '✓ Sélectionné' : 'Voir') +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('') : '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">Aucune ligne trouvée</div><div class="empty-dsc">Modifiez votre recherche</div></div>';
 
-  document.getElementById('lineList').innerHTML   = html;
+  document.getElementById('lineList').innerHTML    = html;
   document.getElementById('mobLineList').innerHTML = html;
 
-  // Update mobile peek
-  const act = trips.filter(t => Object.values(users).some(u => u.trip_id === t.id)).length;
-  document.getElementById('mobPeekTitle').textContent = `${trips.length} ligne${trips.length!==1?'s':''} disponibles`;
-  document.getElementById('mobPeekSub').textContent   = act > 0
-    ? `${act} ligne${act!==1?'s':''} active${act!==1?'s':''}` : 'Aucun passager en ligne';
-}
-
-function selectLine(tripId) {
-  const trip = trips.find(t => t.id === tripId);
-  if (!trip) return;
-  showRip(trip);
-  if ((trip.waypoints || []).length >= 2) {
-    map.fitBounds(L.latLngBounds(trip.waypoints.map(w => L.latLng(w[0],w[1]))), { padding: [40,40] });
-  }
-}
-
-function joinLine(tripId) {
-  if (!hasJoined) {
-    document.getElementById('joinOverlay').classList.remove('hidden');
-    setTimeout(() => pickJoinTrip(tripId), 80);
-    return;
-  }
-  const u = users[myId];
-  if (!u) return;
-  socket.emit('join_trip', { username: u.username, trip_id: tripId });
-  const s = JSON.parse(sessionStorage.getItem('mg_join') || '{}');
-  s.trip_id = tripId;
-  sessionStorage.setItem('mg_join', JSON.stringify(s));
-  toast('✓ Ligne changée', 'ok');
+  const actCount = trips.filter(t => t.matricule).length;
+  document.getElementById('busCount').textContent    = actCount;
+  document.getElementById('mobPeekTitle').textContent = trips.length + ' ligne' + (trips.length !== 1 ? 's' : '');
+  document.getElementById('mobPeekSub').textContent   = actCount > 0
+    ? actCount + ' ligne' + (actCount !== 1 ? 's' : '') + ' active' + (actCount !== 1 ? 's' : '')
+    : 'Aucun véhicule en service';
 }
 
 function filterLines(q) { lineFilter = q; renderLines(); }
@@ -942,116 +640,41 @@ function toggleActiveFilter() {
 }
 
 /* ================================================================
-   SIDEBAR – PASSENGERS
+   SELECT TRIP
 ================================================================ */
-function renderPax() {
-  const list = Object.values(users);
-  document.getElementById('badgePax').textContent = list.length;
-  document.getElementById('hdrCount').textContent = list.length;
-
-  if (!list.length) {
-    document.getElementById('paxList').innerHTML = `<div class="empty"><div class="empty-ico">👥</div><div class="empty-ttl">Aucun passager</div><div class="empty-dsc">Partagez le lien pour inviter</div></div>`;
-    return;
+function selectTrip(tripId) {
+  selTripId = tripId;
+  renderLines();
+  renderSelectedTrip();
+  const trip = trips.find(t => t.id === tripId);
+  if (trip) showRip(trip);
+  if (trip && (trip.waypoints || []).length >= 2) {
+    map.fitBounds(L.latLngBounds(trip.waypoints.map(w => L.latLng(w[0], w[1]))), { padding: [50, 50] });
   }
-
-  document.getElementById('paxList').innerHTML = list.map(u => {
-    const trip  = trips.find(t => t.id === u.trip_id);
-    const color = trip ? trip.color : '#6b7280';
-    const isMe  = u.id === myId;
-    const gps   = !!(u.lat && u.lng);
-
-    return `<div class="user-item${isMe?' me':''}">
-      <div class="user-ava" style="background:${color}">${(u.username||'?').charAt(0).toUpperCase()}</div>
-      <div class="user-info">
-        <div class="user-name">${esc(u.username)}${isMe?' <span style="font-size:9px;background:var(--primary);color:#fff;padding:1px 5px;border-radius:99px;vertical-align:middle;">Vous</span>':''}</div>
-        <div class="user-route">${trip ? esc(trip.name) : 'Ligne inconnue'}</div>
-      </div>
-      <span class="gps-pill ${gps?'gps-on':'gps-off'}">${gps?'📍 GPS':'❌ Hors ligne'}</span>
-    </div>`;
-  }).join('');
 }
 
 /* ================================================================
-   JOIN
+   ROUTE INFO PANEL
 ================================================================ */
-function renderJoinPicker() {
-  document.getElementById('joinPicker').innerHTML = trips.map((t, i) => {
-    const dist = routeDist(t.waypoints);
-    return `<div class="trip-opt" id="jopt_${t.id}" onclick="pickJoinTrip('${t.id}')">
-      <div class="trip-opt-icon" style="background:${t.color}20;border:2px solid ${t.color}">🚌</div>
-      <div class="trip-opt-info">
-        <div class="trip-opt-name">${esc(t.name)}</div>
-        <div class="trip-opt-meta">${(t.waypoints||[]).length} arrêts · ${dist.toFixed(1)} km</div>
-      </div>
-      <div class="trip-opt-check">✓</div>
-    </div>`;
-  }).join('') || `<div class="empty-dsc" style="padding:12px 0;">Aucune ligne disponible</div>`;
-
-  if (trips.length) pickJoinTrip(selJoinId || trips[0].id);
+function showRip(trip) {
+  document.getElementById('ripDot').style.background = trip.color;
+  document.getElementById('ripName').textContent      = trip.name;
+  refreshRip();
+  document.getElementById('rip').classList.remove('hidden');
 }
 
-function pickJoinTrip(id) {
-  selJoinId = id;
-  document.querySelectorAll('.trip-opt').forEach(el => el.classList.remove('sel'));
-  const el = document.getElementById('jopt_' + id);
-  if (el) el.classList.add('sel');
+function hideRip() {
+  document.getElementById('rip').classList.add('hidden');
 }
 
-function doJoin() {
-  const name = document.getElementById('nameInput').value.trim();
-  if (!name)       { toast('⚠️ Entrez votre nom', 'err'); return; }
-  if (!selJoinId)  { toast('⚠️ Choisissez une ligne', 'err'); return; }
-
-  socket.emit('join_trip', { username: name, trip_id: selJoinId });
-  sessionStorage.setItem('mg_join', JSON.stringify({ username: name, trip_id: selJoinId }));
-  hasJoined = true;
-  document.getElementById('joinOverlay').classList.add('hidden');
-  startGeo();
-  toast('✓ Vous avez rejoint le suivi !', 'ok');
-}
-
-function autoRejoin() {
-  const raw = sessionStorage.getItem('mg_join');
-  if (!raw) { document.getElementById('joinOverlay').classList.remove('hidden'); return; }
-  const { username, trip_id } = JSON.parse(raw);
-  if (!username || !trip_id) { document.getElementById('joinOverlay').classList.remove('hidden'); return; }
-  socket.emit('join_trip', { username, trip_id });
-  hasJoined = true;
-  document.getElementById('nameInput').value = username;
-  selJoinId = trip_id;
-  startGeo();
-}
-
-/* ================================================================
-   GEO
-================================================================ */
-function startGeo() {
-  if (!navigator.geolocation) return;
-  stopGeo();
-  geoWatch = navigator.geolocation.watchPosition(
-    p => socket.emit('location_update', { lat: p.coords.latitude, lng: p.coords.longitude }),
-    () => setTimeout(startGeo, 8000),
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
-  );
-}
-
-function stopGeo() {
-  if (geoWatch !== null) { navigator.geolocation.clearWatch(geoWatch); geoWatch = null; }
-}
-
-function locateMe() {
-  if (!navigator.geolocation) { toast('❌ Géolocalisation non disponible', 'err'); return; }
-  navigator.geolocation.getCurrentPosition(
-    p => { map.setView([p.coords.latitude, p.coords.longitude], 16, { animate: true }); toast('📍 Position localisée', 'ok'); },
-    () => toast('❌ Impossible de vous localiser', 'err'),
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-}
-
-function toggleFollow() {
-  autoFollow = !autoFollow;
-  document.getElementById('followBtn').classList.toggle('on', autoFollow);
-  toast(autoFollow ? '🎯 Suivi automatique activé' : 'Suivi automatique désactivé');
+function refreshRip() {
+  const trip = trips.find(t => t.id === selTripId);
+  if (!trip) return;
+  const pos  = busPositions[trip.id];
+  const dist = routeDist(trip.waypoints);
+  document.getElementById('ripBus').textContent    = pos ? pos.matricule : '–';
+  document.getElementById('ripStops').textContent  = (trip.stops || []).length;
+  document.getElementById('ripDist').textContent   = dist.toFixed(1);
 }
 
 /* ================================================================
@@ -1059,21 +682,21 @@ function toggleFollow() {
 ================================================================ */
 function openAdmin() {
   if (wpActive) stopWp();
+  if (spActive) stopSp();
   renderAdmList();
+  admTab('lines');
   document.getElementById('adminOverlay').classList.remove('hidden');
 }
 function closeAdmin() {
   document.getElementById('adminOverlay').classList.add('hidden');
-  if (wpActive) stopWp();
 }
 
 const ADM_TABS = {
   lines: { btn: 'admTabLines', panel: 'admLines' },
   edit:  { btn: 'admTabEdit',  panel: 'admEdit'  },
 };
-
 function admTab(tab) {
-  Object.entries(ADM_TABS).forEach(([k,v]) => {
+  Object.entries(ADM_TABS).forEach(([k, v]) => {
     document.getElementById(v.btn).classList.toggle('active', k === tab);
     document.getElementById(v.panel).classList.toggle('hidden', k !== tab);
   });
@@ -1081,19 +704,31 @@ function admTab(tab) {
 
 function renderAdmList() {
   document.getElementById('admTripList').innerHTML = trips.length
-    ? trips.map(t => `<div class="adm-trip">
-        <div class="adm-trip-swatch" style="background:${t.color}"></div>
-        <div class="adm-trip-info">
-          <div class="adm-trip-name">${esc(t.name)}</div>
-          <div class="adm-trip-meta">${(t.waypoints||[]).length} points de passage</div>
-        </div>
-        <div class="adm-trip-acts">
-          <button class="btn btn-secondary btn-sm" onclick="startEdit('${t.id}')" title="Renommer / couleur">✏️</button>
-          <button class="btn btn-primary btn-sm" onclick="startWpEdit('${t.id}')" title="Tracer l'itinéraire sur la carte" style="gap:5px;">📍 Itinéraire</button>
-          <button class="btn btn-danger btn-sm" onclick="doDelete('${t.id}')" title="Supprimer">🗑️</button>
-        </div>
-      </div>`).join('')
-    : `<div class="empty"><div class="empty-ico">🚌</div><div class="empty-ttl">Aucune ligne</div><div class="empty-dsc">Créez votre première ligne</div></div>`;
+    ? trips.map(t => {
+        const mat   = t.matricule || '';
+        const stops = (t.stops || []).length;
+        const wps   = (t.waypoints || []).length;
+        const hasBus = !!busPositions[t.id];
+        const matHtml = mat
+          ? '<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;">🚌 ' + esc(mat) + '</span>'
+          : '<span style="color:var(--muted);font-size:11px;">Aucun véhicule</span>';
+
+        return '<div class="adm-trip">' +
+          '<div class="adm-trip-swatch" style="background:' + t.color + '"></div>' +
+          '<div class="adm-trip-info">' +
+            '<div class="adm-trip-name">' + esc(t.name) + '</div>' +
+            '<div class="adm-trip-meta">' + matHtml + ' · ' + wps + ' pts route · ' + stops + ' arrêts</div>' +
+          '</div>' +
+          '<div class="adm-trip-acts">' +
+            (mat ? '<button class="btn btn-success btn-sm" onclick="startDriver(\'' + t.id + '\',\'' + esc(mat) + '\')" title="Mode conducteur">🚗 Conduire</button>' : '') +
+            '<button class="btn btn-secondary btn-sm" onclick="startWpEdit(\'' + t.id + '\')" title="Modifier l\'itinéraire sur la carte">📍 Route</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="startSpEdit(\'' + t.id + '\')" title="Modifier les arrêts sur la carte">🚏 Arrêts</button>' +
+            '<button class="btn btn-secondary btn-sm" onclick="startEdit(\'' + t.id + '\')" title="Nom / couleur / matricule">✏️</button>' +
+            '<button class="btn btn-danger btn-sm" onclick="doDelete(\'' + t.id + '\')">🗑️</button>' +
+          '</div>' +
+        '</div>';
+      }).join('')
+    : '<div class="empty"><div class="empty-ico">🚌</div><div class="empty-ttl">Aucune ligne</div><div class="empty-dsc">Créez votre première ligne</div></div>';
 }
 
 function showAddForm() { document.getElementById('addForm').classList.remove('hidden'); }
@@ -1103,7 +738,7 @@ function doAddTrip() {
   const name  = document.getElementById('newName').value.trim();
   const color = document.getElementById('newColor').value;
   if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
-  fetch('/api/trips', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, color, waypoints:[] }) })
+  fetch('/api/trips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, color }) })
     .then(() => { hideAddForm(); toast('✓ Ligne créée', 'ok'); });
 }
 
@@ -1111,65 +746,64 @@ function startEdit(id) {
   const t = trips.find(x => x.id === id);
   if (!t) return;
   editTripId = id;
-  document.getElementById('editName').value  = t.name;
-  document.getElementById('editColor').value = t.color;
+  document.getElementById('editName').value      = t.name;
+  document.getElementById('editColor').value     = t.color;
+  document.getElementById('editMatricule').value = t.matricule || '';
   admTab('edit');
 }
 
 function doSaveEdit() {
   if (!editTripId) return;
-  const name  = document.getElementById('editName').value.trim();
-  const color = document.getElementById('editColor').value;
+  const name       = document.getElementById('editName').value.trim();
+  const color      = document.getElementById('editColor').value;
+  const matricule  = document.getElementById('editMatricule').value.trim() || null;
   if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
-  fetch(`/api/trips/${editTripId}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, color }) })
-    .then(() => { toast('✓ Ligne modifiée', 'ok'); admTab('lines'); });
+  fetch('/api/trips/' + editTripId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, color, matricule })
+  }).then(() => { toast('✓ Ligne modifiée', 'ok'); admTab('lines'); });
 }
 
 function doDelete(id) {
   if (!confirm('Supprimer cette ligne ?')) return;
-  fetch(`/api/trips/${id}`, { method:'DELETE' }).then(() => toast('Ligne supprimée'));
+  fetch('/api/trips/' + id, { method: 'DELETE' }).then(() => toast('Ligne supprimée'));
 }
 
+/* ================================================================
+   WAYPOINT EDITOR (route)
+================================================================ */
 function startWpEdit(id) {
   const t = trips.find(x => x.id === id);
   if (!t) return;
-  editTripId  = id;
-  wpPoints    = t.waypoints ? t.waypoints.map(p => [...p]) : [];
-  // Ferme l'admin (display:none immédiat)
+  editTripId = id;
+  wpPoints   = (t.waypoints || []).map(p => [...p]);
   document.getElementById('adminOverlay').classList.add('hidden');
-  // Passe en mode édition
   wpActive = true;
   map.getContainer().style.cursor = 'crosshair';
-  // Place les marqueurs existants sur la carte
   clearWpMarkers();
   wpPoints.forEach((p, i) => placeWpMarker(p[0], p[1], i, t.color));
   drawWpPreview(t.color);
-  updateWpBar();
+  updateBar();
   document.getElementById('wpBar').style.display = 'flex';
-  // Centre la vue
   if (wpPoints.length >= 2) {
     map.fitBounds(L.latLngBounds(wpPoints.map(p => L.latLng(p[0], p[1]))), { padding: [60, 60] });
   }
 }
 
-/* ================================================================
-   WAYPOINTS
-================================================================ */
 function placeWpMarker(lat, lng, idx, color) {
   color = color || (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
-  const m = L.circleMarker([lat, lng], {
-    radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1
-  }).addTo(map);
-  m.bindTooltip(`Point ${idx + 1}`, { direction: 'top' });
+  const m = L.circleMarker([lat, lng], { radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 }).addTo(map);
+  m.bindTooltip('Point ' + (idx + 1), { direction: 'top' });
   m.on('contextmenu', () => {
     const i = wpMarkers.indexOf(m);
     if (i === -1) return;
     map.removeLayer(m);
     wpMarkers.splice(i, 1);
     wpPoints.splice(i, 1);
-    wpMarkers.forEach((mk, j) => mk.setTooltipContent(`Point ${j + 1}`));
+    wpMarkers.forEach((mk, j) => mk.setTooltipContent('Point ' + (j + 1)));
     drawWpPreview();
-    updateWpBar();
+    updateBar();
   });
   wpMarkers.push(m);
 }
@@ -1188,11 +822,6 @@ function drawWpPreview(color) {
   }
 }
 
-function updateWpBar() {
-  const n = wpPoints.length;
-  document.getElementById('wpBarInfo').textContent = n + ' point' + (n > 1 ? 's' : '');
-}
-
 function stopWp() {
   wpActive = false;
   map.getContainer().style.cursor = '';
@@ -1200,16 +829,9 @@ function stopWp() {
   clearWpMarkers();
 }
 
-function cancelWp() {
-  stopWp();
-  openAdmin();
-  admTab('lines');
-}
-
 function saveWp() {
-  if (!editTripId) return;
   if (wpPoints.length < 2) { toast('⚠️ Ajoutez au moins 2 points', 'err'); return; }
-  fetch(`/api/trips/${editTripId}`, {
+  fetch('/api/trips/' + editTripId, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ waypoints: wpPoints })
@@ -1222,13 +844,126 @@ function saveWp() {
 }
 
 /* ================================================================
-   TABS (sidebar)
+   STOP POINTS EDITOR
 ================================================================ */
-function switchTab(tab) {
-  document.getElementById('tabLines').classList.toggle('active',   tab === 'lines');
-  document.getElementById('tabPax').classList.toggle('active',     tab === 'pax');
-  document.getElementById('tabLinesContent').classList.toggle('hidden', tab !== 'lines');
-  document.getElementById('tabPaxContent').classList.toggle('hidden',   tab !== 'pax');
+function startSpEdit(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t) return;
+  editTripId = id;
+  spPoints   = (t.stops || []).map(s => ({ ...s }));
+  document.getElementById('adminOverlay').classList.add('hidden');
+  spActive = true;
+  map.getContainer().style.cursor = 'crosshair';
+  clearSpMarkers();
+  spPoints.forEach((s, i) => placeSpMarker(s.name, s.lat, s.lng, i, t.color));
+  updateBar();
+  document.getElementById('wpBar').style.display = 'flex';
+  if (spPoints.length >= 1) {
+    map.fitBounds(L.latLngBounds(spPoints.map(s => L.latLng(s.lat, s.lng))), { padding: [60, 60] });
+  }
+}
+
+function placeSpMarker(name, lat, lng, idx, color) {
+  color = color || (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
+  const icon = L.divIcon({
+    className: '',
+    html: '<div style="width:24px;height:24px;background:#fff;border:3px solid ' + color + ';' +
+          'border-radius:5px;display:flex;align-items:center;justify-content:center;' +
+          'font-size:10px;font-weight:700;color:' + color + ';box-shadow:0 1px 4px rgba(0,0,0,.25);">' + (idx+1) + '</div>',
+    iconSize: [24,24], iconAnchor: [12,12]
+  });
+  const m = L.marker([lat, lng], { icon }).addTo(map)
+    .bindTooltip((idx + 1) + '. ' + name, { direction: 'top' });
+  m.on('contextmenu', () => {
+    const i = spMarkers.indexOf(m);
+    if (i === -1) return;
+    map.removeLayer(m);
+    spMarkers.splice(i, 1);
+    spPoints.splice(i, 1);
+    spMarkers.forEach((mk, j) => mk.setTooltipContent((j+1) + '. ' + spPoints[j].name));
+    updateBar();
+  });
+  spMarkers.push(m);
+}
+
+function clearSpMarkers() {
+  spMarkers.forEach(m => map.removeLayer(m));
+  spMarkers = [];
+}
+
+function stopSp() {
+  spActive = false;
+  map.getContainer().style.cursor = '';
+  document.getElementById('wpBar').style.display = 'none';
+  clearSpMarkers();
+}
+
+function saveSp() {
+  fetch('/api/trips/' + editTripId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stops: spPoints })
+  }).then(() => {
+    stopSp();
+    openAdmin();
+    admTab('lines');
+    toast('✓ Arrêts sauvegardés', 'ok');
+  });
+}
+
+/* ================================================================
+   EDIT BAR (shared for wp + sp)
+================================================================ */
+function updateBar() {
+  if (wpActive) {
+    document.getElementById('wpBarLabel').textContent = '📍 Cliquez pour ajouter des points · Clic droit pour supprimer';
+    document.getElementById('wpBarInfo').textContent  = wpPoints.length + ' point' + (wpPoints.length !== 1 ? 's' : '');
+  } else if (spActive) {
+    document.getElementById('wpBarLabel').textContent = '🚏 Cliquez pour ajouter un arrêt · Clic droit pour supprimer';
+    document.getElementById('wpBarInfo').textContent  = spPoints.length + ' arrêt' + (spPoints.length !== 1 ? 's' : '');
+  }
+}
+
+function onBarSave()   { if (wpActive) saveWp(); else if (spActive) saveSp(); }
+function onBarCancel() {
+  if (wpActive) stopWp(); else if (spActive) stopSp();
+  openAdmin();
+  admTab('lines');
+}
+
+/* ================================================================
+   DRIVER MODE
+================================================================ */
+function startDriver(tripId, matricule) {
+  if (!navigator.geolocation) { toast('❌ GPS non disponible sur cet appareil', 'err'); return; }
+  drivingTripId    = tripId;
+  drivingMatricule = matricule;
+  closeAdmin();
+
+  driverWatch = navigator.geolocation.watchPosition(
+    p => {
+      socket.emit('bus_location_update', {
+        matricule: drivingMatricule,
+        lat: p.coords.latitude,
+        lng: p.coords.longitude
+      });
+    },
+    () => toast('⚠️ Erreur GPS — réessai dans 5 s', 'err'),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 }
+  );
+
+  const trip = trips.find(t => t.id === tripId);
+  document.getElementById('driverInfo').textContent = (trip ? trip.name + ' · ' : '') + matricule;
+  document.getElementById('driverBanner').classList.remove('hidden');
+  toast('🚗 Mode conducteur activé', 'ok');
+}
+
+function stopDriver() {
+  if (driverWatch !== null) { navigator.geolocation.clearWatch(driverWatch); driverWatch = null; }
+  drivingMatricule = null;
+  drivingTripId    = null;
+  document.getElementById('driverBanner').classList.add('hidden');
+  toast('Mode conducteur désactivé');
 }
 
 /* ================================================================
@@ -1238,14 +973,6 @@ function toggleSheet() {
   sheetUp = !sheetUp;
   document.getElementById('mobSheet').classList.toggle('up', sheetUp);
 }
-
-/* ================================================================
-   HEADER SEARCH
-================================================================ */
-document.getElementById('hdrSearch').addEventListener('input', e => {
-  lineFilter = e.target.value;
-  renderLines();
-});
 
 /* ================================================================
    TOAST
@@ -1258,24 +985,28 @@ function toast(msg, type = '') {
   setTimeout(() => {
     el.style.animation = 'tOut .3s ease forwards';
     setTimeout(() => el.remove(), 300);
-  }, 3000);
+  }, 3500);
 }
 
 /* ================================================================
-   UPDATES
+   UPDATE HANDLERS
 ================================================================ */
 function onTripsUpdated() {
-  drawRoutes();
   renderLines();
-  renderJoinPicker();
   renderAdmList();
-  refreshRip();
+  // Auto-select first active trip, or first trip overall
+  if (!selTripId) {
+    const first = trips.find(t => t.matricule) || trips[0];
+    if (first) selectTrip(first.id);
+  } else {
+    renderSelectedTrip();
+    refreshRip();
+  }
 }
 
-function onUsersUpdated() {
-  drawUsers();
-  renderPax();
+function onBusesUpdated() {
   renderLines();
+  renderSelectedTrip();
   refreshRip();
 }
 
@@ -1283,9 +1014,7 @@ function onUsersUpdated() {
    UTILS
 ================================================================ */
 function esc(s) {
-  return String(s)
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function routeDist(wps) {
@@ -1298,7 +1027,7 @@ function routeDist(wps) {
 function haversine([lat1,lon1],[lat2,lon2]) {
   const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 </script>
 </body>

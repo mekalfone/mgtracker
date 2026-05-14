@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C \"e:/coding_projects/python_mekalfone/Hosted/5_mg_tracker\" status)",
+      "Bash(git -C \"e:/coding_projects/python_mekalfone/Hosted/5_mg_tracker\" diff --stat HEAD)",
+      "Bash(git -C \"e:/coding_projects/python_mekalfone/Hosted/5_mg_tracker\" show HEAD:app.py)",
+      "PowerShell(Stop-Process -Name python -Force -ErrorAction SilentlyContinue)",
+      "Bash(curl -s http://localhost:5000/health)"
+    ]
+  }
+}

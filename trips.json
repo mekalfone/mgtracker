@@ -32,7 +32,25 @@
         3.8198,
         11.5238
       ]
-    ]
+    ],
+    "stops": [
+      {
+        "name": "Nsam",
+        "lat": 3.8373,
+        "lng": 11.5082
+      },
+      {
+        "name": "Rond-point Mimboman",
+        "lat": 3.833,
+        "lng": 11.514
+      },
+      {
+        "name": "Carrefour Ekounou",
+        "lat": 3.8198,
+        "lng": 11.5238
+      }
+    ],
+    "matricule": "CE 300 DL"
   },
   {
     "id": "citeu-mendong",
@@ -71,12 +89,31 @@
         3.8318,
         11.4728
       ]
-    ]
+    ],
+    "stops": [
+      {
+        "name": "Cité Universitaire",
+        "lat": 3.8682,
+        "lng": 11.5178
+      },
+      {
+        "name": "Carrière",
+        "lat": 3.8522,
+        "lng": 11.4998
+      },
+      {
+        "name": "Mendong",
+        "lat": 3.8318,
+        "lng": 11.4728
+      }
+    ],
+    "matricule": "CE 587 DL"
   },
   {
     "id": "f05d5ffc-1e09-4115-a3c2-571f840e4e69",
     "name": "Carrefour Emia → Acacia",
     "color": "#121212",
+    "matricule": null,
     "waypoints": [
       [
         3.8624455627159735,
@@ -202,6 +239,23 @@
         3.840897197453682,
         11.488598585128786
       ]
+    ],
+    "stops": [
+      {
+        "name": "Carrefour Emia",
+        "lat": 3.8624,
+        "lng": 11.5041
+      },
+      {
+        "name": "Damas",
+        "lat": 3.856,
+        "lng": 11.491
+      },
+      {
+        "name": "Acacia",
+        "lat": 3.8409,
+        "lng": 11.4886
+      }
     ]
   }
 ]
