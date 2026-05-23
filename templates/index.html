@@ -232,6 +232,23 @@
     }
 
     .hidden { display: none !important; }
+
+    /* Test panel */
+    .test-panel {
+      position: fixed; top: calc(var(--hh) + 10px); right: 16px;
+      background: #fff; border-radius: 14px; box-shadow: var(--shadow-lg);
+      border: 2px solid var(--amber); width: 310px; z-index: 900; overflow: hidden;
+    }
+    .test-panel-hdr {
+      background: #fffbeb; padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      border-bottom: 1px solid #fde68a;
+    }
+    .test-panel-title { font-size: 13px; font-weight: 700; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .test-panel-body  { padding: 16px; }
+    .test-coord-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
+    .test-status      { font-size: 11px; color: var(--muted); margin-top: 10px; text-align: center; min-height: 16px; }
+    .hdr-btn.test-on  { background: var(--amber); border-color: var(--amber); color: #000; }
   </style>
 </head>
 
@@ -253,6 +270,7 @@
         <span id="statusTxt">Connexion…</span>
       </div>
       <div class="bus-pill">🚌 <span id="busCount">0</span> bus actif</div>
+      <button class="hdr-btn" id="testBtn" onclick="toggleTestPanel()">🧪 Test</button>
       <button class="hdr-btn" onclick="openAdmin()">
         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
         Admin
@@ -350,6 +368,37 @@
 
 <!-- Toast -->
 <div class="toast-wrap" id="toasts"></div>
+
+<!-- Test panel -->
+<div class="test-panel hidden" id="testPanel">
+  <div class="test-panel-hdr">
+    <span class="test-panel-title">🧪 Simulation Conducteur</span>
+    <button onclick="closeTestPanel()" style="font-size:16px;color:#92400e;line-height:1;">✕</button>
+  </div>
+  <div class="test-panel-body">
+    <div class="fg" style="margin-bottom:12px;">
+      <label class="fl">Ligne à simuler</label>
+      <select class="fi" id="testTripSel" onchange="onTestTripChange()"></select>
+    </div>
+    <div class="test-coord-row">
+      <div>
+        <label class="fl">Latitude</label>
+        <input class="fi" id="testLat" type="number" step="0.00001" placeholder="3.84000" />
+      </div>
+      <div>
+        <label class="fl">Longitude</label>
+        <input class="fi" id="testLng" type="number" step="0.00001" placeholder="11.50000" />
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="showTestMarker()">
+      📍 Afficher le marqueur
+    </button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="clearTestMarker()">
+      🗑️ Effacer le marqueur
+    </button>
+    <div class="test-status" id="testStatus"></div>
+  </div>
+</div>
 
 <!-- Edit bar (route waypoints or stop points) -->
 <div id="wpBar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
@@ -1028,6 +1077,98 @@ function haversine([lat1,lon1],[lat2,lon2]) {
   const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ================================================================
+   TEST / SIMULATION MODE
+================================================================ */
+let testMarker    = null;
+let testPanelOpen = false;
+
+function toggleTestPanel() {
+  testPanelOpen = !testPanelOpen;
+  document.getElementById('testPanel').classList.toggle('hidden', !testPanelOpen);
+  document.getElementById('testBtn').classList.toggle('test-on', testPanelOpen);
+  if (testPanelOpen) populateTestTrips();
+}
+
+function closeTestPanel() {
+  testPanelOpen = false;
+  document.getElementById('testPanel').classList.add('hidden');
+  document.getElementById('testBtn').classList.remove('test-on');
+  clearTestMarker();
+}
+
+function populateTestTrips() {
+  const sel = document.getElementById('testTripSel');
+  sel.innerHTML = trips.map(t =>
+    '<option value="' + t.id + '">' + esc(t.name) +
+    (t.matricule ? ' (' + esc(t.matricule) + ')' : ' — inactif') + '</option>'
+  ).join('');
+  // Pre-fill coords with centre of selected trip's waypoints
+  onTestTripChange();
+}
+
+function onTestTripChange() {
+  const tripId = document.getElementById('testTripSel').value;
+  const trip   = trips.find(t => t.id === tripId);
+  if (!trip || !(trip.waypoints || []).length) return;
+  // Use midpoint of waypoints as default coords
+  const mid = trip.waypoints[Math.floor(trip.waypoints.length / 2)];
+  document.getElementById('testLat').value = mid[0].toFixed(5);
+  document.getElementById('testLng').value = mid[1].toFixed(5);
+  setTestStatus('');
+}
+
+function showTestMarker() {
+  const tripId = document.getElementById('testTripSel').value;
+  const lat    = parseFloat(document.getElementById('testLat').value);
+  const lng    = parseFloat(document.getElementById('testLng').value);
+
+  if (!tripId)             { setTestStatus('⚠️ Sélectionnez une ligne'); return; }
+  if (isNaN(lat) || isNaN(lng)) { setTestStatus('⚠️ Coordonnées invalides'); return; }
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) { setTestStatus('⚠️ Coordonnées hors limites'); return; }
+
+  const trip = trips.find(t => t.id === tripId);
+  if (!trip) return;
+
+  // Remove old test marker
+  if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
+
+  const icon = L.divIcon({
+    className: '',
+    html: '<div style="position:relative;width:44px;height:44px;">' +
+          '<div style="width:44px;height:44px;background:' + trip.color + ';' +
+          'border:3px dashed #fff;border-radius:50%;display:flex;align-items:center;' +
+          'justify-content:center;font-size:22px;opacity:.9;' +
+          'box-shadow:0 0 0 3px ' + trip.color + '55,0 2px 10px rgba(0,0,0,.3);">🚌</div>' +
+          '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);' +
+          'background:#f59e0b;color:#000;font-size:9px;font-weight:800;' +
+          'padding:1px 6px;border-radius:4px;white-space:nowrap;letter-spacing:.05em;">TEST</div>' +
+          '</div>',
+    iconSize: [44, 44], iconAnchor: [22, 22]
+  });
+
+  testMarker = L.marker([lat, lng], { icon, zIndexOffset: 2000 })
+    .addTo(map)
+    .bindPopup(
+      '<div class="lpop">' +
+      '<div class="lpop-n">🧪 TEST — ' + esc(trip.name) + '</div>' +
+      '<div class="lpop-r">Lat : ' + lat.toFixed(5) + ' · Lng : ' + lng.toFixed(5) + '</div>' +
+      '</div>'
+    );
+
+  map.setView([lat, lng], 15, { animate: true });
+  setTestStatus('✓ Marqueur placé · ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+}
+
+function clearTestMarker() {
+  if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
+  setTestStatus('Marqueur effacé');
+}
+
+function setTestStatus(msg) {
+  document.getElementById('testStatus').textContent = msg;
 }
 </script>
 </body>
