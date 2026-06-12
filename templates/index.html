@@ -113,6 +113,18 @@
     .view-btn:hover   { background: var(--primary-dark); }
     .view-btn.sel { background: var(--success); }
 
+    /* Stops ETA list (expands inside selected route card) */
+    .rc-eta-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+    .rc-eta-hdr { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
+    .rc-eta-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--border); }
+    .rc-eta-row:last-child { border-bottom: none; }
+    .rc-eta-num  { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #fff; flex-shrink: 0; }
+    .rc-eta-name { flex: 1; font-size: 12px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rc-eta-time { font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .eta-live    { color: var(--primary); }
+    .eta-passed  { color: var(--muted); font-weight: 400; font-style: italic; }
+    .eta-none    { color: var(--muted); font-weight: 400; }
+
     /* Map */
     .map-wrap { flex: 1; position: relative; overflow: hidden; }
     #map { width: 100%; height: 100%; }
@@ -592,8 +604,21 @@ function renderSelectedTrip() {
             'font-size:10px;font-weight:700;color:' + trip.color + ';box-shadow:0 1px 4px rgba(0,0,0,.25);">' + (i+1) + '</div>',
       iconSize: [22,22], iconAnchor: [11,11]
     });
+    const eta = estimateWaitTime(trip, i);
+    let etaLine = '';
+    if (eta === null)  etaLine = '<div style="margin-top:5px;font-size:12px;color:#6b7280;">Aucun bus en service</div>';
+    else if (eta === -1) etaLine = '<div style="margin-top:5px;font-size:12px;color:#6b7280;">Bus déjà passé</div>';
+    else               etaLine = '<div style="margin-top:5px;font-size:13px;font-weight:700;color:#1d4ed8;">⏱ Bus dans ~' + eta + ' min</div>';
+
     L.marker([s.lat, s.lng], { icon }).addTo(routeLayer)
-      .bindTooltip('<b>' + (i+1) + '. ' + esc(s.name) + '</b>', { direction: 'top' });
+      .bindTooltip('<b>' + (i+1) + '. ' + esc(s.name) + '</b>', { direction: 'top' })
+      .bindPopup(
+        '<div class="lpop">' +
+        '<div class="lpop-n">🚏 ' + esc(s.name) + '</div>' +
+        '<div class="lpop-r">Arrêt ' + (i+1) + ' · ' + esc(trip.name) + '</div>' +
+        etaLine +
+        '</div>'
+      );
   });
 
   // Bus marker
@@ -666,6 +691,7 @@ function renderLines() {
             (isSel ? '✓ Sélectionné' : 'Voir') +
           '</button>' +
         '</div>' +
+        (isSel ? stopsEtaHtml(t) : '') +
       '</div>' +
     '</div>';
   }).join('') : '<div class="empty"><div class="empty-ico">🔍</div><div class="empty-ttl">Aucune ligne trouvée</div><div class="empty-dsc">Modifiez votre recherche</div></div>';
@@ -1080,10 +1106,86 @@ function haversine([lat1,lon1],[lat2,lon2]) {
 }
 
 /* ================================================================
+   ETA / WAIT TIME CALCULATION
+================================================================ */
+// Returns: null (no bus), -1 (bus already passed), or minutes (integer ≥ 1)
+function estimateWaitTime(trip, stopIdx) {
+  // Simulation position takes priority over real bus position
+  let pos;
+  if (testSimPos && testSimPos.tripId === trip.id) {
+    pos = { lat: testSimPos.lat, lng: testSimPos.lng };
+  } else {
+    pos = busPositions[trip.id];
+  }
+  if (!pos || !pos.lat || !pos.lng) return null;
+
+  const wps   = trip.waypoints || [];
+  const stops = trip.stops     || [];
+  if (wps.length < 2 || stopIdx >= stops.length) return null;
+
+  const stop  = stops[stopIdx];
+  const busPt = [pos.lat, pos.lng];
+  const stPt  = [stop.lat, stop.lng];
+
+  // Nearest waypoint index to bus current position
+  let busWpIdx = 0, minD = Infinity;
+  wps.forEach((wp, i) => { const d = haversine(busPt, wp); if (d < minD) { minD = d; busWpIdx = i; } });
+
+  // Nearest waypoint index to stop
+  let stopWpIdx = 0;
+  minD = Infinity;
+  wps.forEach((wp, i) => { const d = haversine(stPt, wp); if (d < minD) { minD = d; stopWpIdx = i; } });
+
+  // Bus at or past stop
+  if (busWpIdx >= stopWpIdx) return -1;
+
+  // Distance along route: bus → nearest wp → ... → stop's wp → stop
+  let dist = haversine(busPt, wps[busWpIdx]);
+  for (let i = busWpIdx; i < stopWpIdx; i++) dist += haversine(wps[i], wps[i + 1]);
+  dist += haversine(wps[stopWpIdx], stPt);
+
+  // Average urban speed: 20 km/h
+  return Math.max(1, Math.round((dist / 20) * 60));
+}
+
+// Builds the ETA section HTML for a route card
+function stopsEtaHtml(trip) {
+  const stops    = trip.stops || [];
+  if (!stops.length) return '';
+  const isSimMode = !!(testSimPos && testSimPos.tripId === trip.id);
+  const hasBus    = !!busPositions[trip.id] || isSimMode;
+
+  const rows = stops.map((s, i) => {
+    const eta = hasBus ? estimateWaitTime(trip, i) : null;
+    let timeHtml;
+    if (eta === null)  timeHtml = '<span class="rc-eta-time eta-none">Aucun bus</span>';
+    else if (eta === -1) timeHtml = '<span class="rc-eta-time eta-passed">Passé</span>';
+    else               timeHtml = '<span class="rc-eta-time eta-live">~' + eta + ' min</span>';
+
+    return '<div class="rc-eta-row">' +
+      '<div class="rc-eta-num" style="background:' + trip.color + ';">' + (i + 1) + '</div>' +
+      '<span class="rc-eta-name">' + esc(s.name) + '</span>' +
+      timeHtml +
+    '</div>';
+  }).join('');
+
+  const simBadge = isSimMode
+    ? ' <span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;">🧪 SIM</span>'
+    : '';
+
+  return '<div class="rc-eta-section">' +
+    '<div class="rc-eta-hdr">⏱ Temps d\'attente estimé' + simBadge + '</div>' +
+    rows +
+    (!hasBus ? '<div style="font-size:10px;color:var(--muted);margin-top:6px;">Assignez un véhicule pour voir les temps d\'attente en temps réel.</div>' : '') +
+  '</div>';
+}
+
+/* ================================================================
    TEST / SIMULATION MODE
 ================================================================ */
 let testMarker    = null;
 let testPanelOpen = false;
+let testSimPos    = null;  // {tripId, lat, lng} — active simulation position
 
 function toggleTestPanel() {
   testPanelOpen = !testPanelOpen;
@@ -1158,12 +1260,26 @@ function showTestMarker() {
       '</div>'
     );
 
+  // Activate simulation position so ETAs are computed from this point
+  testSimPos = { tripId, lat, lng };
+
+  // Switch to tested trip (or just re-render if already selected)
+  if (selTripId !== tripId) {
+    selectTrip(tripId);
+  } else {
+    renderLines();
+    renderSelectedTrip();
+  }
+
   map.setView([lat, lng], 15, { animate: true });
   setTestStatus('✓ Marqueur placé · ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
 }
 
 function clearTestMarker() {
   if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
+  testSimPos = null;
+  renderLines();
+  renderSelectedTrip();
   setTestStatus('Marqueur effacé');
 }
 
