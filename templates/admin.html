@@ -86,12 +86,13 @@
 
     /* Admin trip rows */
     .adm-row { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
-    .adm-row-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+    .adm-row-hdr { display: flex; align-items: center; gap: 10px; padding: 10px 12px 6px; }
     .adm-swatch { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
     .adm-info { flex: 1; min-width: 0; }
     .adm-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .adm-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .adm-acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+    .adm-badge { margin-top: 3px; }
+    .adm-row-acts { display: flex; align-items: center; gap: 5px; padding: 0 12px 10px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 8px; margin-top: 2px; }
+    .adm-stats { font-size: 10px; color: var(--muted); margin-right: auto; }
 
     /* Add form */
     .add-form { background: var(--bg); border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 4px; }
@@ -505,28 +506,39 @@ function renderAdmList() {
     const mat    = t.matricule || '';
     const stops  = (t.stops || []).length;
     const wps    = (t.waypoints || []).length;
-    const matHtml = mat
-      ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:600;">🚌 ' + esc(mat) + '</span>'
-      : '<span style="color:var(--muted);font-size:10px;">Sans véhicule</span>';
-
+    const dist   = routeDist(t.waypoints || []);
     const isEditOpen = editingLineId === t.id;
 
+    // Matricule badge — own line so it never fights with buttons
+    const matHtml = mat
+      ? '<span style="display:inline-flex;align-items:center;gap:4px;background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:5px;font-size:10px;font-weight:700;">🚌 ' + esc(mat) + '</span>'
+      : '<span style="display:inline-flex;align-items:center;background:#f3f4f6;color:#9ca3af;padding:2px 8px;border-radius:5px;font-size:10px;">○ Sans véhicule</span>';
+
     return '<div class="adm-row" style="margin-bottom:6px;">' +
-      '<div class="adm-row-top">' +
+
+      // ── Header: swatch + name/badge + tiny edit/delete ──
+      '<div class="adm-row-hdr">' +
         '<div class="adm-swatch" style="background:' + t.color + '"></div>' +
         '<div class="adm-info">' +
           '<div class="adm-name">' + esc(t.name) + '</div>' +
-          '<div class="adm-meta">' + matHtml + ' · ' + wps + ' pts · ' + stops + ' arrêts</div>' +
+          '<div class="adm-badge">' + matHtml + '</div>' +
         '</div>' +
-        '<div class="adm-acts">' +
-          (mat ? '<button class="btn btn-success btn-xs" onclick="startDriver(\'' + t.id + '\',\'' + esc(mat) + '\')">🚗 Conduire</button>' : '') +
-          '<button class="btn btn-secondary btn-xs" onclick="startWpEdit(\'' + t.id + '\')">📍 Route</button>' +
-          '<button class="btn btn-secondary btn-xs" onclick="startSpEdit(\'' + t.id + '\')">🚏 Arrêts</button>' +
-          '<button class="btn btn-secondary btn-xs" onclick="toggleEditForm(\'' + t.id + '\')">✏️</button>' +
-          '<button class="btn btn-danger btn-xs" onclick="doDelete(\'' + t.id + '\')">🗑️</button>' +
+        '<div style="display:flex;gap:4px;flex-shrink:0;">' +
+          '<button class="btn btn-secondary btn-xs" onclick="toggleEditForm(\'' + t.id + '\')" title="Modifier">✏️</button>' +
+          '<button class="btn btn-danger btn-xs"    onclick="doDelete(\'' + t.id + '\')"       title="Supprimer">🗑️</button>' +
         '</div>' +
       '</div>' +
-      // Inline edit form
+
+      // ── Actions row: stats + functional buttons ──
+      '<div class="adm-row-acts">' +
+        '<span class="adm-stats">' + wps + ' pts · ' + stops + ' arrêts · ' + dist.toFixed(1) + ' km</span>' +
+        (wps >= 2 ? '<button class="btn btn-secondary btn-xs" onclick="startWpEdit(\'' + t.id + '\')"     title="Modifier l\'itinéraire">📍 Route</button>' : '') +
+        '<button class="btn btn-secondary btn-xs" onclick="startSpEdit(\'' + t.id + '\')"   title="Modifier les arrêts">🚏 Arrêts</button>' +
+        (wps >= 2 ? '<button class="btn btn-secondary btn-xs" onclick="createReturnTrip(\'' + t.id + '\')" title="Créer le trajet retour">↩️ Retour</button>' : '') +
+        (mat      ? '<button class="btn btn-success btn-xs"   onclick="startDriver(\'' + t.id + '\',\'' + esc(mat) + '\')" title="Activer le GPS conducteur">🚗 Conduire</button>' : '') +
+      '</div>' +
+
+      // ── Inline edit form ──
       '<div class="edit-form' + (isEditOpen ? '' : ' hidden') + '" id="editForm-' + t.id + '">' +
         '<div class="edit-form-title">Modifier la ligne</div>' +
         '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;">' +
@@ -541,14 +553,15 @@ function renderAdmList() {
         '</div>' +
         '<div class="fg" style="margin-bottom:10px;">' +
           '<label class="fl">Matricule du véhicule</label>' +
-          '<input class="fi" id="editMat-' + t.id + '" value="' + esc(mat) + '" placeholder="Ex: DL-1234-A (vide = inactif)" />' +
-          '<div class="fi-note">Laisser vide pour désactiver le suivi de ce bus.</div>' +
+          '<input class="fi" id="editMat-' + t.id + '" value="' + esc(mat) + '" placeholder="Ex: CE 300 DL (vide = inactif)" />' +
+          '<div class="fi-note">Laisser vide pour désactiver le suivi. La plaque doit correspondre exactement.</div>' +
         '</div>' +
         '<div style="display:flex;gap:6px;">' +
           '<button class="btn btn-primary btn-sm" onclick="doSaveEdit(\'' + t.id + '\')">💾 Sauvegarder</button>' +
           '<button class="btn btn-secondary btn-sm" onclick="toggleEditForm(\'' + t.id + '\')">Annuler</button>' +
         '</div>' +
       '</div>' +
+
     '</div>';
   }).join('');
 }
@@ -567,6 +580,32 @@ function doAddTrip() {
 function toggleEditForm(id) {
   editingLineId = (editingLineId === id) ? null : id;
   renderAdmList();
+}
+
+function createReturnTrip(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t || (t.waypoints || []).length < 2) { toast('⚠️ Aucun itinéraire défini', 'err'); return; }
+
+  // Build return name: reverse "A → B" to "B → A"
+  let retName;
+  if (t.name.includes('→')) {
+    retName = t.name.split('→').map(s => s.trim()).reverse().join(' → ');
+  } else {
+    retName = t.name + ' – Retour';
+  }
+
+  if (!confirm('Créer le trajet retour "' + retName + '" ?\n\nLes points de passage et arrêts seront inversés automatiquement.')) return;
+
+  const revWps   = [...t.waypoints].reverse();
+  const revStops = [...(t.stops || [])].reverse();
+
+  fetch('/api/trips', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: retName, color: t.color, waypoints: revWps, stops: revStops })
+  }).then(r => r.json()).then(newTrip => {
+    toast('✓ Trajet retour "' + retName + '" créé', 'ok');
+  });
 }
 
 function doSaveEdit(id) {
