@@ -17,7 +17,8 @@ app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-i
 
 socketio = SocketIO(app, cors_allowed_origins="*", logger=False, engineio_logger=False)
 
-TRIPS_FILE = os.path.join(os.path.dirname(__file__), 'trips.json')
+TRIPS_FILE        = os.path.join(os.path.dirname(__file__), 'trips.json')
+RESERVATIONS_FILE = os.path.join(os.path.dirname(__file__), 'reservations.json')
 
 DEFAULT_TRIPS = [
     {
@@ -28,8 +29,7 @@ DEFAULT_TRIPS = [
             [3.8373, 11.5082], [3.8348, 11.5098], [3.8320, 11.5128],
             [3.8292, 11.5158], [3.8258, 11.5185], [3.8228, 11.5212], [3.8198, 11.5238]
         ],
-        "stops": [],
-        "matricule": None
+        "stops": [], "matricule": None
     },
     {
         "id": "citeu-mendong",
@@ -40,52 +40,77 @@ DEFAULT_TRIPS = [
             [3.8522, 11.4998], [3.8462, 11.4918], [3.8405, 11.4848],
             [3.8358, 11.4782], [3.8318, 11.4728]
         ],
-        "stops": [],
-        "matricule": None
+        "stops": [], "matricule": None
     }
 ]
 
 
-def load_trips():
-    if os.path.exists(TRIPS_FILE):
+# ── Data helpers ──────────────────────────────────────────────
+
+def load_json(path, default):
+    if os.path.exists(path):
         try:
-            with open(TRIPS_FILE, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            for t in data:
-                t.setdefault('stops', [])
-                t.setdefault('matricule', None)
-            return data
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
         except Exception as e:
-            logger.error('Error loading trips: %s', e)
-    data = [dict(t) for t in DEFAULT_TRIPS]
-    save_trips(data)
+            logger.error('Error loading %s: %s', path, e)
+    return default() if callable(default) else default
+
+
+def save_json(path, data):
+    try:
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(data, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.error('Error saving %s: %s', path, e)
+
+
+def load_trips():
+    data = load_json(TRIPS_FILE, None)
+    if data is None:
+        data = [dict(t) for t in DEFAULT_TRIPS]
+        save_json(TRIPS_FILE, data)
+    else:
+        for t in data:
+            t.setdefault('stops', [])
+            t.setdefault('matricule', None)
     return data
 
 
-def save_trips(trips_data):
-    try:
-        with open(TRIPS_FILE, 'w', encoding='utf-8') as f:
-            json.dump(trips_data, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        logger.error('Error saving trips: %s', e)
+trips        = load_trips()
+reservations = load_json(RESERVATIONS_FILE, list)
+bus_positions = {}   # {trip_id: {lat, lng, matricule, timestamp}}
 
 
-trips = load_trips()
-bus_positions = {}  # {trip_id: {lat, lng, matricule, timestamp}}
+# ── Pages ─────────────────────────────────────────────────────
 
-
-@app.route('/')
-def index():
-    resp = app.make_response(render_template('index.html'))
+def no_cache_response(template):
+    resp = app.make_response(render_template(template))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate'
     resp.headers['Pragma'] = 'no-cache'
     return resp
 
 
+@app.route('/')
+def index():
+    return no_cache_response('index.html')
+
+
+@app.route('/admin')
+def admin_page():
+    return no_cache_response('admin.html')
+
+
 @app.route('/health')
 def health():
-    return jsonify({'status': 'healthy', 'active_buses': len(bus_positions)})
+    return jsonify({
+        'status': 'healthy',
+        'active_buses': len(bus_positions),
+        'pending_reservations': sum(1 for r in reservations if r.get('status') == 'pending')
+    })
 
+
+# ── Trip API ──────────────────────────────────────────────────
 
 @app.route('/api/trips', methods=['GET'])
 def get_trips():
@@ -106,7 +131,7 @@ def create_trip():
         'matricule': None
     }
     trips.append(trip)
-    save_trips(trips)
+    save_json(TRIPS_FILE, trips)
     socketio.emit('trips_updated', trips)
     return jsonify(trip), 201
 
@@ -118,30 +143,14 @@ def update_trip(trip_id):
         if trip['id'] == trip_id:
             trips[i] = {
                 'id': trip_id,
-                'name': data.get('name', trip['name']).strip(),
-                'color': data.get('color', trip['color']),
+                'name':      data.get('name', trip['name']).strip(),
+                'color':     data.get('color', trip['color']),
                 'waypoints': data.get('waypoints', trip['waypoints']),
-                'stops': data.get('stops', trip.get('stops', [])),
+                'stops':     data.get('stops', trip.get('stops', [])),
                 'matricule': data.get('matricule', trip.get('matricule'))
             }
-            save_trips(trips)
+            save_json(TRIPS_FILE, trips)
             socketio.emit('trips_updated', trips)
-            return jsonify(trips[i])
-    return jsonify({'error': 'Trip not found'}), 404
-
-
-@app.route('/api/trips/<trip_id>/matricule', methods=['PUT'])
-def set_matricule(trip_id):
-    data = request.get_json()
-    mat = (data.get('matricule') or '').strip() or None
-    for i, trip in enumerate(trips):
-        if trip['id'] == trip_id:
-            trips[i]['matricule'] = mat
-            if not mat and trip_id in bus_positions:
-                del bus_positions[trip_id]
-            save_trips(trips)
-            socketio.emit('trips_updated', trips)
-            socketio.emit('bus_positions_updated', bus_positions)
             return jsonify(trips[i])
     return jsonify({'error': 'Trip not found'}), 404
 
@@ -153,13 +162,75 @@ def delete_trip(trip_id):
     trips = [t for t in trips if t['id'] != trip_id]
     if len(trips) == before:
         return jsonify({'error': 'Trip not found'}), 404
-    if trip_id in bus_positions:
-        del bus_positions[trip_id]
-    save_trips(trips)
+    bus_positions.pop(trip_id, None)
+    save_json(TRIPS_FILE, trips)
     socketio.emit('trips_updated', trips)
     socketio.emit('bus_positions_updated', bus_positions)
     return '', 204
 
+
+# ── Reservation API ───────────────────────────────────────────
+
+@app.route('/api/reservations', methods=['GET'])
+def get_reservations():
+    return jsonify(reservations)
+
+
+@app.route('/api/reservations', methods=['POST'])
+def create_reservation():
+    data = request.get_json() or {}
+    for field in ['name', 'phone', 'date', 'time', 'location']:
+        if not str(data.get(field, '')).strip():
+            return jsonify({'error': f'Le champ {field} est requis'}), 400
+    res = {
+        'id':          str(uuid.uuid4()),
+        'name':        str(data['name']).strip()[:100],
+        'email':       str(data.get('email', '')).strip()[:100],
+        'phone':       str(data['phone']).strip()[:30],
+        'date':        str(data['date']),
+        'time':        str(data['time']),
+        'location':    str(data['location']).strip()[:200],
+        'pickup_lat':  data.get('pickup_lat'),
+        'pickup_lng':  data.get('pickup_lng'),
+        'message':     str(data.get('message', '')).strip()[:500],
+        'status':      'pending',
+        'admin_response': None,
+        'created_at':  time.strftime('%Y-%m-%dT%H:%M:%S')
+    }
+    reservations.append(res)
+    save_json(RESERVATIONS_FILE, reservations)
+    socketio.emit('reservation_created', res)
+    return jsonify(res), 201
+
+
+@app.route('/api/reservations/<res_id>', methods=['PUT'])
+def update_reservation(res_id):
+    data = request.get_json() or {}
+    for i, res in enumerate(reservations):
+        if res['id'] == res_id:
+            if 'status' in data:
+                reservations[i]['status'] = data['status']
+            if 'admin_response' in data:
+                reservations[i]['admin_response'] = data['admin_response']
+            save_json(RESERVATIONS_FILE, reservations)
+            socketio.emit('reservation_updated', reservations[i])
+            return jsonify(reservations[i])
+    return jsonify({'error': 'Not found'}), 404
+
+
+@app.route('/api/reservations/<res_id>', methods=['DELETE'])
+def delete_reservation(res_id):
+    global reservations
+    before = len(reservations)
+    reservations = [r for r in reservations if r['id'] != res_id]
+    if len(reservations) == before:
+        return jsonify({'error': 'Not found'}), 404
+    save_json(RESERVATIONS_FILE, reservations)
+    socketio.emit('reservation_deleted', {'id': res_id})
+    return '', 204
+
+
+# ── WebSocket ─────────────────────────────────────────────────
 
 @socketio.on('connect')
 def on_connect():
@@ -180,7 +251,7 @@ def on_bus_location_update(data):
         return
     trip = next((t for t in trips if t.get('matricule') == matricule), None)
     if not trip:
-        emit('bus_error', {'message': "Matricule non reconnu. Vérifiez avec l'administrateur."})
+        emit('bus_error', {'message': "Matricule non reconnu."})
         return
     try:
         lat = float(data['lat'])
@@ -196,8 +267,8 @@ def on_bus_location_update(data):
 
 
 if __name__ == '__main__':
-    host = os.environ.get('HOST', '0.0.0.0')
-    port = int(os.environ.get('PORT', 5000))
+    host  = os.environ.get('HOST', '0.0.0.0')
+    port  = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('DEBUG', 'False').lower() == 'true'
     logger.info('Starting on %s:%s debug=%s', host, port, debug)
-    socketio.run(app, host=host, port=port, debug=debug)
+    socketio.run(app, host=host, port=port, debug=debug, allow_unsafe_werkzeug=True)

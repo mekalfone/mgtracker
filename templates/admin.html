@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin – MG Tracker</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚙️</text></svg>" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --primary:       #1d4ed8;
+      --primary-dark:  #1e3a8a;
+      --primary-light: #dbeafe;
+      --amber:         #f59e0b;
+      --success:       #10b981;
+      --danger:        #ef4444;
+      --bg:            #f0f4ff;
+      --card:          #ffffff;
+      --text:          #111827;
+      --muted:         #6b7280;
+      --border:        #e5e7eb;
+      --shadow:        0 1px 4px rgba(0,0,0,.08);
+      --shadow-lg:     0 10px 24px rgba(0,0,0,.12), 0 4px 8px rgba(0,0,0,.06);
+      --radius:        12px;
+      --radius-sm:     8px;
+      --ease:          .2s ease;
+      --hh:            62px;
+      --sw:            420px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--bg); overflow: hidden; }
+    button { cursor: pointer; border: none; background: none; font: inherit; }
+    input, select, textarea { font: inherit; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
+
+    .app { display: flex; flex-direction: column; height: 100vh; }
+
+    /* Header */
+    .hdr { height: var(--hh); background: #0f172a; display: flex; align-items: center; gap: 14px; padding: 0 20px; flex-shrink: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,.4); }
+    .hdr-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .hdr-logo-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+    .hdr-logo-title { font-size: 16px; font-weight: 700; color: #fff; }
+    .hdr-logo-sub   { font-size: 10px; color: rgba(255,255,255,.45); margin-top: 2px; }
+    .admin-badge { display: inline-flex; align-items: center; padding: 3px 10px; background: rgba(251,191,36,.15); border: 1px solid rgba(251,191,36,.35); border-radius: 20px; font-size: 11px; font-weight: 700; color: var(--amber); letter-spacing: .04em; }
+    .hdr-right { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .status-pill { display: flex; align-items: center; gap: 7px; padding: 5px 13px; background: rgba(255,255,255,.08); border-radius: 24px; font-size: 12px; color: rgba(255,255,255,.7); }
+    .status-dot  { width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; transition: var(--ease); }
+    .status-dot.on { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,.3); }
+    .bus-pill { padding: 5px 13px; background: rgba(255,255,255,.08); border-radius: 24px; font-size: 12px; color: rgba(255,255,255,.7); }
+    .hdr-btn { display: flex; align-items: center; gap: 7px; padding: 7px 14px; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; transition: var(--ease); text-decoration: none; }
+    .hdr-btn:hover { background: rgba(255,255,255,.2); }
+    .hdr-btn.test-on { background: var(--amber); border-color: var(--amber); color: #000; }
+
+    /* Driver banner */
+    .driver-banner { position: fixed; top: var(--hh); left: 0; right: 0; background: var(--success); color: #fff; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 8px 16px; font-size: 13px; font-weight: 600; z-index: 800; }
+    .driver-banner.hidden { display: none; }
+    .driver-stop-btn { padding: 3px 12px; background: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.4); border-radius: 6px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+
+    /* Main layout */
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* Admin Sidebar */
+    .sidebar { width: var(--sw); background: #fff; border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden; }
+    .agency { padding: 14px 18px; background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%); color: #fff; flex-shrink: 0; }
+    .agency-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .agency-name::before { content: ''; width: 8px; height: 8px; background: var(--amber); border-radius: 50%; flex-shrink: 0; }
+    .agency-meta { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 4px; }
+
+    /* Sidebar tabs */
+    .stabs { display: flex; border-bottom: 2px solid var(--border); flex-shrink: 0; background: #fff; }
+    .stab { flex: 1; padding: 12px 8px; font-size: 12px; font-weight: 600; color: var(--muted); text-align: center; cursor: pointer; transition: var(--ease); display: flex; align-items: center; justify-content: center; gap: 6px; border-bottom: 3px solid transparent; margin-bottom: -2px; }
+    .stab:hover { color: var(--primary); }
+    .stab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .stab-badge { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--danger); color: #fff; font-size: 10px; font-weight: 700; }
+
+    /* Sidebar content */
+    .stab-content { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+    .stab-content.hidden { display: none !important; }
+    .stab-toolbar { padding: 12px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .stab-scroll  { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+
+    /* Admin trip rows */
+    .adm-row { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+    .adm-row-top { display: flex; align-items: center; gap: 10px; padding: 10px 12px; }
+    .adm-swatch { width: 32px; height: 32px; border-radius: 8px; flex-shrink: 0; }
+    .adm-info { flex: 1; min-width: 0; }
+    .adm-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .adm-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .adm-acts { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+
+    /* Add form */
+    .add-form { background: var(--bg); border: 1.5px dashed var(--border); border-radius: var(--radius-sm); padding: 12px; margin-top: 4px; }
+    .add-form-title { font-size: 13px; font-weight: 600; margin-bottom: 10px; }
+
+    /* Edit form (inline in sidebar) */
+    .edit-form { border-top: 1px solid var(--border); padding: 12px; background: #f8faff; }
+    .edit-form-title { font-size: 12px; font-weight: 700; color: var(--primary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 10px; }
+
+    /* Reservation cards */
+    .res-card { background: var(--bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; transition: var(--ease); }
+    .res-card.pending   { border-left: 4px solid var(--amber); }
+    .res-card.confirmed { border-left: 4px solid var(--success); }
+    .res-card.rejected  { border-left: 4px solid var(--danger); }
+    .res-card-top { padding: 10px 12px; cursor: pointer; }
+    .res-card-top:hover { background: rgba(0,0,0,.02); }
+    .res-row1 { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 4px; }
+    .res-name { font-size: 13px; font-weight: 700; }
+    .res-status { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 20px; font-size: 10px; font-weight: 700; }
+    .res-status.pending   { background: #fef3c7; color: #92400e; }
+    .res-status.confirmed { background: #d1fae5; color: #065f46; }
+    .res-status.rejected  { background: #fee2e2; color: #991b1b; }
+    .res-row2 { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+    .res-expand { border-top: 1px solid var(--border); padding: 12px; background: #fff; }
+    .res-expand.hidden { display: none; }
+    .res-msg { font-size: 12px; color: var(--text); background: var(--bg); border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; line-height: 1.5; font-style: italic; }
+    .res-msg:empty { display: none; }
+    .res-response-lbl { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; }
+    .res-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+
+    /* Res filter */
+    .res-filter { display: flex; gap: 4px; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; flex-wrap: wrap; }
+    .res-filter-btn { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; color: var(--muted); background: var(--bg); border: 1px solid var(--border); transition: var(--ease); }
+    .res-filter-btn:hover  { border-color: var(--primary); color: var(--primary); }
+    .res-filter-btn.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); }
+    .res-count-hdr { padding: 8px 14px 4px; font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; flex-shrink: 0; }
+
+    /* Map */
+    .map-wrap { flex: 1; position: relative; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+    .map-ctrl { position: absolute; top: 14px; right: 14px; display: flex; flex-direction: column; gap: 8px; z-index: 500; }
+    .map-ctrl-btn { width: 40px; height: 40px; background: #fff; border-radius: 10px; box-shadow: var(--shadow-lg); display: flex; align-items: center; justify-content: center; font-size: 18px; transition: var(--ease); }
+    .map-ctrl-btn:hover { transform: scale(1.06); }
+
+    /* Form */
+    .fg { margin-bottom: 12px; }
+    .fl { display: block; font-size: 11px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .fi { width: 100%; padding: 8px 11px; border: 1px solid var(--border); border-radius: 7px; font-size: 12px; outline: none; background: #fff; transition: var(--ease); }
+    .fi:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.1); }
+    textarea.fi { resize: vertical; min-height: 60px; }
+    .fi-note { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+    /* Buttons */
+    .btn { padding: 8px 14px; border-radius: 7px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: var(--ease); cursor: pointer; }
+    .btn-primary   { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
+    .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-success   { background: var(--success); color: #fff; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger    { background: var(--danger); color: #fff; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-amber     { background: var(--amber); color: #000; }
+    .btn-amber:hover { background: #d97706; }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+    .btn-xs { padding: 3px 7px; font-size: 11px; border-radius: 5px; }
+
+    /* Test panel */
+    .test-panel { position: fixed; top: calc(var(--hh) + 10px); right: 16px; background: #fff; border-radius: 14px; box-shadow: var(--shadow-lg); border: 2px solid var(--amber); width: 300px; z-index: 900; overflow: hidden; }
+    .test-panel-hdr { background: #fffbeb; padding: 11px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #fde68a; }
+    .test-panel-title { font-size: 13px; font-weight: 700; color: #92400e; display: flex; align-items: center; gap: 8px; }
+    .test-panel-body  { padding: 14px; }
+    .test-coord-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .test-status      { font-size: 11px; color: var(--muted); margin-top: 8px; text-align: center; min-height: 16px; }
+
+    /* Leaflet */
+    .leaflet-tooltip { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 12px; border-radius: 6px; }
+    .leaflet-tooltip-top::before { border-top-color: #334155; }
+    .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--shadow-lg); }
+    .lpop { font-family: 'Inter', sans-serif; font-size: 13px; }
+    .lpop-n { font-weight: 700; margin-bottom: 3px; }
+    .lpop-r { color: var(--muted); font-size: 12px; }
+
+    /* Toast */
+    .toast-wrap { position: fixed; top: 76px; right: 18px; z-index: 2000; display: flex; flex-direction: column; gap: 8px; }
+    .toast { padding: 11px 16px; background: #fff; border-radius: 10px; box-shadow: var(--shadow-lg); font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 9px; border-left: 4px solid var(--primary); max-width: 280px; animation: tIn .3s ease; }
+    .toast.ok  { border-left-color: var(--success); }
+    .toast.err { border-left-color: var(--danger); }
+    @keyframes tIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes tOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+
+    /* Empty */
+    .empty { padding: 28px 16px; text-align: center; }
+    .empty-ico { font-size: 30px; margin-bottom: 8px; }
+    .empty-ttl { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+    .empty-dsc { font-size: 11px; color: var(--muted); }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+
+<body>
+<div class="app">
+
+  <!-- Header -->
+  <header class="hdr">
+    <div class="hdr-logo">
+      <div class="hdr-logo-icon">🚌</div>
+      <div>
+        <div class="hdr-logo-title">MG Tracker &nbsp;<span class="admin-badge">ADMIN</span></div>
+        <div class="hdr-logo-sub">Tableau de bord administrateur</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="status-pill">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusTxt">Connexion…</span>
+      </div>
+      <div class="bus-pill">🚌 <span id="busCount">0</span> actif</div>
+      <button class="hdr-btn" id="testBtn" onclick="toggleTestPanel()">🧪 Test</button>
+      <a class="hdr-btn" href="/">← Site public</a>
+    </div>
+  </header>
+
+  <!-- Driver banner -->
+  <div class="driver-banner hidden" id="driverBanner">
+    🚗 Mode Conducteur actif — <span id="driverInfo"></span>
+    <button class="driver-stop-btn" onclick="stopDriver()">Arrêter</button>
+  </div>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Admin Sidebar -->
+    <aside class="sidebar">
+      <div class="agency">
+        <div class="agency-name">Mekalfone Transport</div>
+        <div class="agency-meta">Gestion des lignes et réservations</div>
+      </div>
+
+      <!-- Sidebar Tabs -->
+      <div class="stabs">
+        <div class="stab active" id="stabLines" onclick="setSidebarTab('lines')">📋 Lignes</div>
+        <div class="stab"       id="stabRes"   onclick="setSidebarTab('reservations')">
+          📅 Réservations
+          <span class="stab-badge hidden" id="pendingBadge">0</span>
+        </div>
+      </div>
+
+      <!-- LINES TAB -->
+      <div class="stab-content" id="tabLines">
+        <div class="stab-toolbar">
+          <span style="font-size:11px;color:var(--muted);" id="linesCountLbl">0 ligne</span>
+          <button class="btn btn-primary btn-sm" onclick="showAddForm()">+ Nouvelle ligne</button>
+        </div>
+        <div class="stab-scroll" id="admTripScroll">
+          <div id="admTripList"></div>
+          <!-- Add form -->
+          <div class="add-form hidden" id="addForm">
+            <div class="add-form-title">Nouvelle ligne</div>
+            <div style="display:grid;grid-template-columns:1fr auto;gap:8px;">
+              <div class="fg" style="margin-bottom:8px;">
+                <label class="fl">Nom</label>
+                <input class="fi" id="newName" placeholder="Ex: Mfoundi → Mokolo" />
+              </div>
+              <div class="fg" style="margin-bottom:8px;">
+                <label class="fl">Couleur</label>
+                <input type="color" class="fi" id="newColor" value="#3b82f6" style="height:38px;padding:3px 5px;cursor:pointer;" />
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-primary btn-sm" onclick="doAddTrip()">Créer</button>
+              <button class="btn btn-secondary btn-sm" onclick="hideAddForm()">Annuler</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESERVATIONS TAB -->
+      <div class="stab-content hidden" id="tabReservations">
+        <div class="res-filter">
+          <button class="res-filter-btn active" id="rfAll"       onclick="setResFilter('all')">Toutes</button>
+          <button class="res-filter-btn"        id="rfPending"   onclick="setResFilter('pending')">En attente</button>
+          <button class="res-filter-btn"        id="rfConfirmed" onclick="setResFilter('confirmed')">Confirmées</button>
+          <button class="res-filter-btn"        id="rfRejected"  onclick="setResFilter('rejected')">Refusées</button>
+        </div>
+        <div class="res-count-hdr" id="resCountLbl">0 réservation</div>
+        <div style="flex:1;overflow-y:auto;padding:0 10px 12px;" id="resList"></div>
+      </div>
+
+    </aside>
+
+    <!-- Map -->
+    <div class="map-wrap">
+      <div id="map"></div>
+      <div class="map-ctrl">
+        <button class="map-ctrl-btn" onclick="fitAllTrips()" title="Vue d'ensemble">🗺️</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- Test panel -->
+<div class="test-panel hidden" id="testPanel">
+  <div class="test-panel-hdr">
+    <span class="test-panel-title">🧪 Simulation Conducteur</span>
+    <button onclick="closeTestPanel()" style="font-size:15px;color:#92400e;">✕</button>
+  </div>
+  <div class="test-panel-body">
+    <div class="fg" style="margin-bottom:10px;">
+      <label class="fl">Ligne à simuler</label>
+      <select class="fi" id="testTripSel" onchange="onTestTripChange()"></select>
+    </div>
+    <div class="test-coord-row">
+      <div>
+        <label class="fl">Latitude</label>
+        <input class="fi" id="testLat" type="number" step="0.00001" placeholder="3.84000" />
+      </div>
+      <div>
+        <label class="fl">Longitude</label>
+        <input class="fi" id="testLng" type="number" step="0.00001" placeholder="11.50000" />
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;" onclick="showTestMarker()">📍 Afficher le marqueur</button>
+    <button class="btn btn-secondary" style="width:100%;margin-top:6px;" onclick="clearTestMarker()">🗑️ Effacer</button>
+    <div class="test-status" id="testStatus"></div>
+  </div>
+</div>
+
+<!-- Edit bar (route waypoints or stop points) -->
+<div id="wpBar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1e3a8a;color:#fff;border-radius:12px;padding:11px 18px;
+  align-items:center;gap:12px;z-index:1500;
+  box-shadow:0 4px 24px rgba(0,0,0,.4);font-size:13px;white-space:nowrap;">
+  <span id="wpBarLabel" style="opacity:.8;font-size:12px;"></span>
+  <span id="wpBarInfo" style="background:rgba(255,255,255,.15);padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;"></span>
+  <button onclick="onBarSave()"   style="background:#10b981;color:#fff;border:none;padding:5px 13px;border-radius:7px;font-weight:600;font-size:12px;cursor:pointer;">💾 Sauvegarder</button>
+  <button onclick="onBarCancel()" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:5px 13px;border-radius:7px;font-weight:600;font-size:12px;cursor:pointer;">✕ Annuler</button>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+/* ── STATE ──────────────────────────────────────────────────── */
+let trips        = [];
+let busPositions = {};
+
+let allTripsLayer = null;
+let busLayerGroup = null;
+
+// Editor
+let wpActive = false, wpPoints = [], wpMarkers = [], wpPreview = null, editTripId = null;
+let spActive = false, spPoints = [], spMarkers = [];
+
+// Driver
+let drivingMatricule = null, drivingTripId = null, driverWatch = null;
+
+// Test
+let testMarker = null, testPanelOpen = false, testSimPos = null;
+
+// Sidebar
+let sidebarTab = 'lines';
+
+// Lines edit
+let editingLineId = null;
+
+// Reservations
+let reservations  = [];
+let resFilter     = 'all';
+let expandedResId = null;
+
+/* ── SOCKET ─────────────────────────────────────────────────── */
+const socket = io();
+socket.on('connect',               ()  => setConnected(true));
+socket.on('disconnect',            ()  => setConnected(false));
+socket.on('trips_updated',         d   => { trips = d; onTripsUpdated(); });
+socket.on('bus_positions_updated', d   => { busPositions = d; renderBusMarkers(); renderAdmList(); });
+socket.on('bus_error',             d   => toast('❌ ' + d.message, 'err'));
+socket.on('reservation_created',   r   => { reservations.unshift(r); renderReservations(); updatePendingBadge(); toast('📅 Nouvelle réservation de ' + esc(r.name)); });
+socket.on('reservation_updated',   r   => { const i = reservations.findIndex(x => x.id === r.id); if (i >= 0) reservations[i] = r; renderReservations(); updatePendingBadge(); });
+socket.on('reservation_deleted',   d   => { reservations = reservations.filter(r => r.id !== d.id); renderReservations(); updatePendingBadge(); });
+
+function setConnected(on) {
+  document.getElementById('statusDot').className = 'status-dot' + (on ? ' on' : '');
+  document.getElementById('statusTxt').textContent = on ? 'Connecté' : 'Déconnecté';
+}
+
+/* ── MAP ────────────────────────────────────────────────────── */
+const map = L.map('map', { zoomControl: false }).setView([3.848, 11.502], 13);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19
+}).addTo(map);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+map.on('click', e => {
+  if (wpActive) {
+    const { lat, lng } = e.latlng;
+    wpPoints.push([lat, lng]);
+    placeWpMarker(lat, lng, wpPoints.length - 1);
+    drawWpPreview();
+    updateBar();
+  } else if (spActive) {
+    const name = prompt('Nom de cet arrêt :');
+    if (!name || !name.trim()) return;
+    const { lat, lng } = e.latlng;
+    spPoints.push({ name: name.trim(), lat, lng });
+    placeSpMarker(name.trim(), lat, lng, spPoints.length - 1);
+    updateBar();
+  }
+});
+
+/* ── MAP: ALL TRIPS OVERVIEW ────────────────────────────────── */
+function renderAllTrips() {
+  if (allTripsLayer) { allTripsLayer.clearLayers(); }
+  else { allTripsLayer = L.layerGroup().addTo(map); }
+
+  trips.forEach(t => {
+    const wps = t.waypoints || [];
+    if (wps.length < 2) return;
+    // Dim if in edit mode for a different trip
+    const isEditing = (wpActive || spActive) && editTripId === t.id;
+    const opacity = (wpActive || spActive) && !isEditing ? 0.2 : 0.75;
+    L.polyline(wps, { color: t.color, weight: isEditing ? 5 : 3, opacity })
+      .addTo(allTripsLayer)
+      .bindTooltip(esc(t.name), { direction: 'top' });
+
+    (t.stops || []).forEach((s, i) => {
+      const icon = L.divIcon({
+        className: '',
+        html: '<div style="width:18px;height:18px;background:#fff;border:2px solid ' + t.color + ';' +
+              'border-radius:50%;display:flex;align-items:center;justify-content:center;' +
+              'font-size:9px;font-weight:700;color:' + t.color + ';">' + (i+1) + '</div>',
+        iconSize: [18,18], iconAnchor: [9,9]
+      });
+      L.marker([s.lat, s.lng], { icon, opacity }).addTo(allTripsLayer)
+        .bindTooltip(esc(s.name), { direction: 'top' });
+    });
+  });
+}
+
+function renderBusMarkers() {
+  if (busLayerGroup) { busLayerGroup.clearLayers(); }
+  else { busLayerGroup = L.layerGroup().addTo(map); }
+
+  Object.entries(busPositions).forEach(([tripId, pos]) => {
+    const trip = trips.find(t => t.id === tripId);
+    if (!trip || !pos.lat || !pos.lng) return;
+    const busIcon = L.divIcon({
+      className: '',
+      html: '<div style="width:38px;height:38px;background:' + trip.color + ';border:3px solid #fff;' +
+            'border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;' +
+            'box-shadow:0 0 0 3px ' + trip.color + '44,0 2px 8px rgba(0,0,0,.3);">🚌</div>',
+      iconSize: [38,38], iconAnchor: [19,19]
+    });
+    L.marker([pos.lat, pos.lng], { icon: busIcon, zIndexOffset: 1000 })
+      .addTo(busLayerGroup)
+      .bindPopup('<div class="lpop"><div class="lpop-n">🚌 ' + esc(trip.name) + '</div>' +
+                 '<div class="lpop-r">Matricule : ' + esc(pos.matricule) + '</div></div>');
+  });
+
+  const actCount = Object.keys(busPositions).length;
+  document.getElementById('busCount').textContent = actCount;
+}
+
+function fitAllTrips() {
+  const allWps = trips.flatMap(t => (t.waypoints || []).map(w => L.latLng(w[0], w[1])));
+  if (allWps.length) map.fitBounds(L.latLngBounds(allWps), { padding: [40, 40] });
+}
+
+function fitTrip(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t || !(t.waypoints || []).length) return;
+  map.fitBounds(L.latLngBounds(t.waypoints.map(w => L.latLng(w[0], w[1]))), { padding: [60, 60] });
+}
+
+function routePin(color, emoji) {
+  return L.divIcon({
+    className: '',
+    html: '<div style="width:28px;height:28px;border-radius:50%;background:' + color + ';border:2px solid #fff;' +
+          'box-shadow:0 2px 6px rgba(0,0,0,.25);display:flex;align-items:center;justify-content:center;font-size:13px;">' + emoji + '</div>',
+    iconSize: [28,28], iconAnchor: [14,14]
+  });
+}
+
+/* ── SIDEBAR TABS ───────────────────────────────────────────── */
+function setSidebarTab(tab) {
+  sidebarTab = tab;
+  document.getElementById('stabLines').classList.toggle('active', tab === 'lines');
+  document.getElementById('stabRes').classList.toggle('active',   tab === 'reservations');
+  document.getElementById('tabLines').classList.toggle('hidden',         tab !== 'lines');
+  document.getElementById('tabReservations').classList.toggle('hidden',  tab !== 'reservations');
+}
+
+/* ── ADMIN: LINES MANAGEMENT ────────────────────────────────── */
+function renderAdmList() {
+  const list = document.getElementById('admTripList');
+  document.getElementById('linesCountLbl').textContent = trips.length + ' ligne' + (trips.length !== 1 ? 's' : '');
+
+  if (!trips.length) {
+    list.innerHTML = '<div class="empty"><div class="empty-ico">🚌</div><div class="empty-ttl">Aucune ligne</div><div class="empty-dsc">Créez votre première ligne</div></div>';
+    return;
+  }
+
+  list.innerHTML = trips.map(t => {
+    const mat    = t.matricule || '';
+    const stops  = (t.stops || []).length;
+    const wps    = (t.waypoints || []).length;
+    const matHtml = mat
+      ? '<span style="background:#d1fae5;color:#065f46;padding:1px 7px;border-radius:5px;font-size:10px;font-weight:600;">🚌 ' + esc(mat) + '</span>'
+      : '<span style="color:var(--muted);font-size:10px;">Sans véhicule</span>';
+
+    const isEditOpen = editingLineId === t.id;
+
+    return '<div class="adm-row" style="margin-bottom:6px;">' +
+      '<div class="adm-row-top">' +
+        '<div class="adm-swatch" style="background:' + t.color + '"></div>' +
+        '<div class="adm-info">' +
+          '<div class="adm-name">' + esc(t.name) + '</div>' +
+          '<div class="adm-meta">' + matHtml + ' · ' + wps + ' pts · ' + stops + ' arrêts</div>' +
+        '</div>' +
+        '<div class="adm-acts">' +
+          (mat ? '<button class="btn btn-success btn-xs" onclick="startDriver(\'' + t.id + '\',\'' + esc(mat) + '\')">🚗 Conduire</button>' : '') +
+          '<button class="btn btn-secondary btn-xs" onclick="startWpEdit(\'' + t.id + '\')">📍 Route</button>' +
+          '<button class="btn btn-secondary btn-xs" onclick="startSpEdit(\'' + t.id + '\')">🚏 Arrêts</button>' +
+          '<button class="btn btn-secondary btn-xs" onclick="toggleEditForm(\'' + t.id + '\')">✏️</button>' +
+          '<button class="btn btn-danger btn-xs" onclick="doDelete(\'' + t.id + '\')">🗑️</button>' +
+        '</div>' +
+      '</div>' +
+      // Inline edit form
+      '<div class="edit-form' + (isEditOpen ? '' : ' hidden') + '" id="editForm-' + t.id + '">' +
+        '<div class="edit-form-title">Modifier la ligne</div>' +
+        '<div style="display:grid;grid-template-columns:1fr auto;gap:8px;">' +
+          '<div class="fg" style="margin-bottom:8px;">' +
+            '<label class="fl">Nom</label>' +
+            '<input class="fi" id="editName-' + t.id + '" value="' + esc(t.name) + '" />' +
+          '</div>' +
+          '<div class="fg" style="margin-bottom:8px;">' +
+            '<label class="fl">Couleur</label>' +
+            '<input type="color" class="fi" id="editColor-' + t.id + '" value="' + esc(t.color) + '" style="height:37px;padding:3px 4px;cursor:pointer;" />' +
+          '</div>' +
+        '</div>' +
+        '<div class="fg" style="margin-bottom:10px;">' +
+          '<label class="fl">Matricule du véhicule</label>' +
+          '<input class="fi" id="editMat-' + t.id + '" value="' + esc(mat) + '" placeholder="Ex: DL-1234-A (vide = inactif)" />' +
+          '<div class="fi-note">Laisser vide pour désactiver le suivi de ce bus.</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:6px;">' +
+          '<button class="btn btn-primary btn-sm" onclick="doSaveEdit(\'' + t.id + '\')">💾 Sauvegarder</button>' +
+          '<button class="btn btn-secondary btn-sm" onclick="toggleEditForm(\'' + t.id + '\')">Annuler</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function showAddForm() { document.getElementById('addForm').classList.remove('hidden'); document.getElementById('newName').focus(); }
+function hideAddForm() { document.getElementById('addForm').classList.add('hidden'); document.getElementById('newName').value = ''; }
+
+function doAddTrip() {
+  const name  = document.getElementById('newName').value.trim();
+  const color = document.getElementById('newColor').value;
+  if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
+  fetch('/api/trips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, color }) })
+    .then(() => { hideAddForm(); toast('✓ Ligne créée', 'ok'); });
+}
+
+function toggleEditForm(id) {
+  editingLineId = (editingLineId === id) ? null : id;
+  renderAdmList();
+}
+
+function doSaveEdit(id) {
+  const name      = document.getElementById('editName-' + id).value.trim();
+  const color     = document.getElementById('editColor-' + id).value;
+  const matricule = document.getElementById('editMat-' + id).value.trim() || null;
+  if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
+  fetch('/api/trips/' + id, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, color, matricule })
+  }).then(() => { editingLineId = null; toast('✓ Ligne modifiée', 'ok'); });
+}
+
+function doDelete(id) {
+  if (!confirm('Supprimer cette ligne ?')) return;
+  fetch('/api/trips/' + id, { method: 'DELETE' }).then(() => toast('Ligne supprimée'));
+}
+
+/* ── WAYPOINT EDITOR ────────────────────────────────────────── */
+function startWpEdit(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t) return;
+  editTripId = id;
+  wpPoints   = (t.waypoints || []).map(p => [...p]);
+  wpActive   = true;
+  map.getContainer().style.cursor = 'crosshair';
+  clearWpMarkers();
+  wpPoints.forEach((p, i) => placeWpMarker(p[0], p[1], i));
+  drawWpPreview();
+  updateBar();
+  document.getElementById('wpBar').style.display = 'flex';
+  renderAllTrips();
+  if (wpPoints.length >= 2) {
+    map.fitBounds(L.latLngBounds(wpPoints.map(p => L.latLng(p[0], p[1]))), { padding: [60, 60] });
+  }
+}
+
+function placeWpMarker(lat, lng, idx) {
+  const color = (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
+  const m = L.circleMarker([lat, lng], { radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 }).addTo(map);
+  m.bindTooltip('Point ' + (idx + 1), { direction: 'top' });
+  m.on('contextmenu', () => {
+    const i = wpMarkers.indexOf(m);
+    if (i === -1) return;
+    map.removeLayer(m);
+    wpMarkers.splice(i, 1);
+    wpPoints.splice(i, 1);
+    wpMarkers.forEach((mk, j) => mk.setTooltipContent('Point ' + (j + 1)));
+    drawWpPreview();
+    updateBar();
+  });
+  wpMarkers.push(m);
+}
+
+function clearWpMarkers() {
+  wpMarkers.forEach(m => map.removeLayer(m));
+  wpMarkers = [];
+  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
+}
+
+function drawWpPreview() {
+  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
+  const color = (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
+  if (wpPoints.length >= 2) {
+    wpPreview = L.polyline(wpPoints, { color, weight: 4, opacity: 0.8, dashArray: '8 5' }).addTo(map);
+  }
+}
+
+function stopWp() {
+  wpActive = false;
+  map.getContainer().style.cursor = '';
+  document.getElementById('wpBar').style.display = 'none';
+  clearWpMarkers();
+  renderAllTrips();
+}
+
+function saveWp() {
+  if (wpPoints.length < 2) { toast('⚠️ Ajoutez au moins 2 points', 'err'); return; }
+  fetch('/api/trips/' + editTripId, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ waypoints: wpPoints })
+  }).then(() => { stopWp(); toast('✓ Itinéraire sauvegardé', 'ok'); });
+}
+
+/* ── STOP POINTS EDITOR ─────────────────────────────────────── */
+function startSpEdit(id) {
+  const t = trips.find(x => x.id === id);
+  if (!t) return;
+  editTripId = id;
+  spPoints   = (t.stops || []).map(s => ({ ...s }));
+  spActive   = true;
+  map.getContainer().style.cursor = 'crosshair';
+  clearSpMarkers();
+  spPoints.forEach((s, i) => placeSpMarker(s.name, s.lat, s.lng, i));
+  updateBar();
+  document.getElementById('wpBar').style.display = 'flex';
+  renderAllTrips();
+  if (spPoints.length) {
+    map.fitBounds(L.latLngBounds(spPoints.map(s => L.latLng(s.lat, s.lng))), { padding: [60, 60] });
+  } else {
+    fitTrip(id);
+  }
+}
+
+function placeSpMarker(name, lat, lng, idx) {
+  const color = (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
+  const icon = L.divIcon({
+    className: '',
+    html: '<div style="width:24px;height:24px;background:#fff;border:3px solid ' + color + ';' +
+          'border-radius:5px;display:flex;align-items:center;justify-content:center;' +
+          'font-size:10px;font-weight:700;color:' + color + ';box-shadow:0 1px 4px rgba(0,0,0,.25);">' + (idx+1) + '</div>',
+    iconSize: [24,24], iconAnchor: [12,12]
+  });
+  const m = L.marker([lat, lng], { icon }).addTo(map)
+    .bindTooltip((idx + 1) + '. ' + name, { direction: 'top' });
+  m.on('contextmenu', () => {
+    const i = spMarkers.indexOf(m);
+    if (i === -1) return;
+    map.removeLayer(m);
+    spMarkers.splice(i, 1);
+    spPoints.splice(i, 1);
+    spMarkers.forEach((mk, j) => mk.setTooltipContent((j+1) + '. ' + spPoints[j].name));
+    updateBar();
+  });
+  spMarkers.push(m);
+}
+
+function clearSpMarkers() {
+  spMarkers.forEach(m => map.removeLayer(m));
+  spMarkers = [];
+}
+
+function stopSp() {
+  spActive = false;
+  map.getContainer().style.cursor = '';
+  document.getElementById('wpBar').style.display = 'none';
+  clearSpMarkers();
+  renderAllTrips();
+}
+
+function saveSp() {
+  fetch('/api/trips/' + editTripId, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stops: spPoints })
+  }).then(() => { stopSp(); toast('✓ Arrêts sauvegardés', 'ok'); });
+}
+
+/* ── EDIT BAR ───────────────────────────────────────────────── */
+function updateBar() {
+  if (wpActive) {
+    document.getElementById('wpBarLabel').textContent = '📍 Clic = ajouter · Clic droit = supprimer';
+    document.getElementById('wpBarInfo').textContent  = wpPoints.length + ' point' + (wpPoints.length !== 1 ? 's' : '');
+  } else if (spActive) {
+    document.getElementById('wpBarLabel').textContent = '🚏 Clic = ajouter arrêt · Clic droit = supprimer';
+    document.getElementById('wpBarInfo').textContent  = spPoints.length + ' arrêt' + (spPoints.length !== 1 ? 's' : '');
+  }
+}
+
+function onBarSave()   { if (wpActive) saveWp(); else if (spActive) saveSp(); }
+function onBarCancel() { if (wpActive) stopWp(); else if (spActive) stopSp(); }
+
+/* ── DRIVER MODE ────────────────────────────────────────────── */
+function startDriver(tripId, matricule) {
+  if (!navigator.geolocation) { toast('❌ GPS non disponible', 'err'); return; }
+  drivingTripId    = tripId;
+  drivingMatricule = matricule;
+
+  driverWatch = navigator.geolocation.watchPosition(
+    p => socket.emit('bus_location_update', {
+      matricule: drivingMatricule,
+      lat: p.coords.latitude,
+      lng: p.coords.longitude
+    }),
+    () => toast('⚠️ Erreur GPS — réessai dans 5 s', 'err'),
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 }
+  );
+
+  const trip = trips.find(t => t.id === tripId);
+  document.getElementById('driverInfo').textContent = (trip ? trip.name + ' · ' : '') + matricule;
+  document.getElementById('driverBanner').classList.remove('hidden');
+  toast('🚗 Mode conducteur activé', 'ok');
+}
+
+function stopDriver() {
+  if (driverWatch !== null) { navigator.geolocation.clearWatch(driverWatch); driverWatch = null; }
+  drivingMatricule = null;
+  drivingTripId    = null;
+  document.getElementById('driverBanner').classList.add('hidden');
+  toast('Mode conducteur désactivé');
+}
+
+/* ── TEST MODE ──────────────────────────────────────────────── */
+function toggleTestPanel() {
+  testPanelOpen = !testPanelOpen;
+  document.getElementById('testPanel').classList.toggle('hidden', !testPanelOpen);
+  document.getElementById('testBtn').classList.toggle('test-on', testPanelOpen);
+  if (testPanelOpen) populateTestTrips();
+}
+
+function closeTestPanel() {
+  testPanelOpen = false;
+  document.getElementById('testPanel').classList.add('hidden');
+  document.getElementById('testBtn').classList.remove('test-on');
+  clearTestMarker();
+}
+
+function populateTestTrips() {
+  document.getElementById('testTripSel').innerHTML = trips.map(t =>
+    '<option value="' + t.id + '">' + esc(t.name) + (t.matricule ? ' (' + esc(t.matricule) + ')' : ' — inactif') + '</option>'
+  ).join('');
+  onTestTripChange();
+}
+
+function onTestTripChange() {
+  const trip = trips.find(t => t.id === document.getElementById('testTripSel').value);
+  if (!trip || !(trip.waypoints || []).length) return;
+  const mid = trip.waypoints[Math.floor(trip.waypoints.length / 2)];
+  document.getElementById('testLat').value = mid[0].toFixed(5);
+  document.getElementById('testLng').value = mid[1].toFixed(5);
+  setTestStatus('');
+}
+
+function showTestMarker() {
+  const tripId = document.getElementById('testTripSel').value;
+  const lat    = parseFloat(document.getElementById('testLat').value);
+  const lng    = parseFloat(document.getElementById('testLng').value);
+
+  if (!tripId)                  { setTestStatus('⚠️ Sélectionnez une ligne'); return; }
+  if (isNaN(lat) || isNaN(lng)) { setTestStatus('⚠️ Coordonnées invalides'); return; }
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) { setTestStatus('⚠️ Hors limites'); return; }
+
+  const trip = trips.find(t => t.id === tripId);
+  if (!trip) return;
+
+  if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
+
+  const icon = L.divIcon({
+    className: '',
+    html: '<div style="position:relative;width:44px;height:44px;">' +
+          '<div style="width:44px;height:44px;background:' + trip.color + ';border:3px dashed #fff;border-radius:50%;' +
+          'display:flex;align-items:center;justify-content:center;font-size:22px;opacity:.9;' +
+          'box-shadow:0 0 0 3px ' + trip.color + '55,0 2px 10px rgba(0,0,0,.3);">🚌</div>' +
+          '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#f59e0b;color:#000;' +
+          'font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;white-space:nowrap;">TEST</div>' +
+          '</div>',
+    iconSize: [44,44], iconAnchor: [22,22]
+  });
+
+  testSimPos = { tripId, lat, lng };
+  testMarker = L.marker([lat, lng], { icon, zIndexOffset: 2000 }).addTo(map)
+    .bindPopup('<div class="lpop"><div class="lpop-n">🧪 TEST — ' + esc(trip.name) + '</div>' +
+               '<div class="lpop-r">' + lat.toFixed(5) + ', ' + lng.toFixed(5) + '</div></div>');
+
+  map.setView([lat, lng], 15, { animate: true });
+  setTestStatus('✓ Marqueur placé · ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
+}
+
+function clearTestMarker() {
+  if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
+  testSimPos = null;
+  setTestStatus('Marqueur effacé');
+}
+
+function setTestStatus(msg) { document.getElementById('testStatus').textContent = msg; }
+
+/* ── RESERVATIONS ───────────────────────────────────────────── */
+function loadReservations() {
+  fetch('/api/reservations')
+    .then(r => r.json())
+    .then(data => {
+      reservations = data.reverse(); // newest first
+      renderReservations();
+      updatePendingBadge();
+    });
+}
+
+function setResFilter(f) {
+  resFilter = f;
+  ['All','Pending','Confirmed','Rejected'].forEach(k =>
+    document.getElementById('rf' + k).classList.toggle('active', f === k.toLowerCase() || (f === 'all' && k === 'All'))
+  );
+  renderReservations();
+}
+
+function updatePendingBadge() {
+  const count = reservations.filter(r => r.status === 'pending').length;
+  const badge = document.getElementById('pendingBadge');
+  badge.textContent = count;
+  badge.classList.toggle('hidden', count === 0);
+}
+
+function renderReservations() {
+  const list = resFilter === 'all'
+    ? reservations
+    : reservations.filter(r => r.status === resFilter);
+
+  document.getElementById('resCountLbl').textContent = list.length + ' réservation' + (list.length !== 1 ? 's' : '');
+
+  const el = document.getElementById('resList');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">📅</div>' +
+      '<div class="empty-ttl">Aucune réservation</div>' +
+      '<div class="empty-dsc">' + (resFilter === 'all' ? 'Les demandes de clients apparaîtront ici.' : 'Aucun résultat pour ce filtre.') + '</div></div>';
+    return;
+  }
+
+  el.innerHTML = list.map(r => {
+    const statusLabel = { pending: '⏳ En attente', confirmed: '✓ Confirmée', rejected: '✗ Refusée' }[r.status] || r.status;
+    const dt = formatDateTime(r.date, r.time);
+    const isExpanded = expandedResId === r.id;
+
+    return '<div class="res-card ' + r.status + '" style="margin-bottom:6px;" id="rc-' + r.id + '">' +
+      '<div class="res-card-top" onclick="toggleResCard(\'' + r.id + '\')">' +
+        '<div class="res-row1">' +
+          '<span class="res-name">' + esc(r.name) + '</span>' +
+          '<span class="res-status ' + r.status + '">' + statusLabel + '</span>' +
+        '</div>' +
+        '<div class="res-row2">' +
+          '<span>📅 ' + esc(dt) + '</span>' +
+          '<span>📍 ' + esc(r.location) + '</span>' +
+        '</div>' +
+        '<div class="res-row2" style="margin-top:2px;">' +
+          '<span>📞 ' + esc(r.phone) + '</span>' +
+          (r.email ? '<span>✉️ ' + esc(r.email) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="res-expand' + (isExpanded ? '' : ' hidden') + '" id="re-' + r.id + '">' +
+        (r.message ? '<div class="res-msg">"' + esc(r.message) + '"</div>' : '') +
+        '<div class="res-response-lbl">Réponse à envoyer</div>' +
+        '<textarea class="fi" id="rrt-' + r.id + '" rows="3" placeholder="Rédigez votre réponse…">' + esc(r.admin_response || '') + '</textarea>' +
+        '<div class="res-actions">' +
+          (r.email ? '<a class="btn btn-primary btn-sm" href="#" onclick="sendResEmail(\'' + r.id + '\');return false;">✉️ Email</a>' : '') +
+          '<a class="btn btn-secondary btn-sm" href="tel:' + esc(r.phone) + '">📞 Appeler</a>' +
+          (r.status !== 'confirmed' ? '<button class="btn btn-success btn-sm" onclick="setResStatus(\'' + r.id + '\',\'confirmed\')">✓ Confirmer</button>' : '') +
+          (r.status !== 'rejected'  ? '<button class="btn btn-danger btn-sm"  onclick="setResStatus(\'' + r.id + '\',\'rejected\')">✗ Rejeter</button>' : '') +
+          (r.status !== 'pending'   ? '<button class="btn btn-secondary btn-sm" onclick="setResStatus(\'' + r.id + '\',\'pending\')">↺ En attente</button>' : '') +
+          '<button class="btn btn-secondary btn-sm" onclick="deleteReservation(\'' + r.id + '\')">🗑️</button>' +
+        '</div>' +
+        (r.admin_response ? '<div style="font-size:10px;color:var(--muted);margin-top:6px;">Dernière réponse envoyée : ' + esc(r.admin_response.substring(0, 60)) + (r.admin_response.length > 60 ? '…' : '') + '</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function toggleResCard(id) {
+  expandedResId = (expandedResId === id) ? null : id;
+  renderReservations();
+}
+
+async function setResStatus(id, status) {
+  const response = document.getElementById('rrt-' + id)?.value.trim() || null;
+  const r = await fetch('/api/reservations/' + id, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ status, admin_response: response })
+  });
+  if (r.ok) {
+    toast('✓ Statut mis à jour', 'ok');
+  }
+}
+
+function sendResEmail(id) {
+  const res      = reservations.find(r => r.id === id);
+  if (!res || !res.email) { toast('Pas d\'email renseigné', 'err'); return; }
+  const response = document.getElementById('rrt-' + id)?.value.trim() || '';
+  const subject  = encodeURIComponent('Votre réservation Mekalfone Transport – ' + formatDateTime(res.date, res.time));
+  const body     = encodeURIComponent(
+    'Bonjour ' + res.name + ',\n\n' +
+    (response || 'Nous vous contactons au sujet de votre demande de réservation du ' + formatDateTime(res.date, res.time) + '.') +
+    '\n\nCordialement,\nMekalfone Transport'
+  );
+  window.open('mailto:' + encodeURIComponent(res.email) + '?subject=' + subject + '&body=' + body);
+  // Save response
+  if (response) {
+    fetch('/api/reservations/' + id, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ admin_response: response })
+    });
+  }
+}
+
+async function deleteReservation(id) {
+  if (!confirm('Supprimer cette réservation ?')) return;
+  const r = await fetch('/api/reservations/' + id, { method: 'DELETE' });
+  if (r.ok) toast('Réservation supprimée');
+}
+
+/* ── UPDATE HANDLERS ────────────────────────────────────────── */
+function onTripsUpdated() {
+  renderAdmList();
+  renderAllTrips();
+  renderBusMarkers();
+  if (testPanelOpen) populateTestTrips();
+}
+
+/* ── UTILS ──────────────────────────────────────────────────── */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function routeDist(wps) {
+  if (!wps || wps.length < 2) return 0;
+  let d = 0;
+  for (let i = 1; i < wps.length; i++) d += haversine(wps[i-1], wps[i]);
+  return d;
+}
+
+function haversine([lat1,lon1],[lat2,lon2]) {
+  const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function formatDateTime(date, time) {
+  if (!date) return '—';
+  try {
+    const d = new Date(date + 'T' + (time || '00:00'));
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) +
+           (time ? ' à ' + time : '');
+  } catch { return date + (time ? ' à ' + time : ''); }
+}
+
+function toast(msg, type = '') {
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.textContent = msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(() => {
+    el.style.animation = 'tOut .3s ease forwards';
+    setTimeout(() => el.remove(), 300);
+  }, 3500);
+}
+
+/* ── INIT ───────────────────────────────────────────────────── */
+loadReservations();
+</script>
+</body>
+</html>

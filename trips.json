@@ -107,7 +107,7 @@
         "lng": 11.4728
       }
     ],
-    "matricule": "CE 587 DL"
+    "matricule": null
   },
   {
     "id": "f05d5ffc-1e09-4115-a3c2-571f840e4e69",
@@ -257,5 +257,13 @@
         "lng": 11.4886
       }
     ]
+  },
+  {
+    "id": "d0477369-88d8-4eec-b0ee-1428ee61ffc9",
+    "name": "Mvolye -> Ahala Barrière",
+    "color": "#3e3a0e",
+    "waypoints": [],
+    "stops": [],
+    "matricule": null
   }
 ]

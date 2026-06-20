@@ -34,19 +34,14 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { height: 100%; font-family: 'Inter', system-ui, sans-serif; color: var(--text); background: var(--bg); overflow: hidden; }
     button { cursor: pointer; border: none; background: none; font: inherit; }
-    input, select { font: inherit; }
+    input, select, textarea { font: inherit; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 99px; }
 
-    /* App shell */
     .app { display: flex; flex-direction: column; height: 100vh; }
 
     /* Header */
-    .hdr {
-      height: var(--hh); background: var(--primary-dark);
-      display: flex; align-items: center; gap: 14px; padding: 0 20px;
-      flex-shrink: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,.3);
-    }
+    .hdr { height: var(--hh); background: var(--primary-dark); display: flex; align-items: center; gap: 14px; padding: 0 20px; flex-shrink: 0; z-index: 200; box-shadow: 0 2px 12px rgba(0,0,0,.3); }
     .hdr-logo { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .hdr-logo-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 20px; }
     .hdr-logo-title { font-size: 16px; font-weight: 700; color: #fff; }
@@ -56,20 +51,12 @@
     .status-dot  { width: 7px; height: 7px; border-radius: 50%; background: #9ca3af; transition: var(--ease); }
     .status-dot.on { background: var(--success); box-shadow: 0 0 0 3px rgba(16,185,129,.3); }
     .bus-pill { padding: 5px 13px; background: rgba(255,255,255,.1); border-radius: 24px; font-size: 12px; color: rgba(255,255,255,.8); }
-    .hdr-btn { display: flex; align-items: center; gap: 7px; padding: 7px 14px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; transition: var(--ease); }
+    .hdr-btn { display: flex; align-items: center; gap: 7px; padding: 7px 14px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.22); border-radius: 8px; color: #fff; font-size: 13px; font-weight: 500; transition: var(--ease); text-decoration: none; }
     .hdr-btn:hover { background: rgba(255,255,255,.25); }
+    .hdr-btn-reserve { background: var(--amber); border-color: var(--amber); color: #000; font-weight: 700; }
+    .hdr-btn-reserve:hover { background: #d97706; border-color: #d97706; }
 
-    /* Driver banner */
-    .driver-banner {
-      position: fixed; top: var(--hh); left: 0; right: 0;
-      background: var(--success); color: #fff;
-      display: flex; align-items: center; justify-content: center; gap: 12px;
-      padding: 8px 16px; font-size: 13px; font-weight: 600; z-index: 800;
-    }
-    .driver-banner.hidden { display: none; }
-    .driver-stop-btn { padding: 3px 12px; background: rgba(255,255,255,.25); border: 1px solid rgba(255,255,255,.4); border-radius: 6px; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
-
-    /* Main */
+    /* Main layout */
     .main { display: flex; flex: 1; overflow: hidden; }
 
     /* Sidebar */
@@ -113,7 +100,6 @@
     .view-btn:hover   { background: var(--primary-dark); }
     .view-btn.sel { background: var(--success); }
 
-    /* Stops ETA list (expands inside selected route card) */
     .rc-eta-section { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
     .rc-eta-hdr { font-size: 10px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 8px; }
     .rc-eta-row { display: flex; align-items: center; gap: 8px; padding: 5px 0; border-bottom: 1px dashed var(--border); }
@@ -146,11 +132,10 @@
     .rip-close  { margin-left: auto; font-size: 16px; color: var(--muted); padding: 4px; transition: var(--ease); }
     .rip-close:hover { color: var(--danger); }
 
-    /* Modals */
+    /* Modals / Overlay */
     .overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(4px); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .overlay.hidden { display: none; }
-    .modal { background: #fff; border-radius: 16px; box-shadow: 0 24px 48px rgba(0,0,0,.22); width: 100%; max-width: 520px; max-height: 90vh; overflow: hidden; display: flex; flex-direction: column; }
-    .modal.wide { max-width: 680px; }
+    .modal { background: #fff; border-radius: 16px; box-shadow: 0 24px 48px rgba(0,0,0,.22); width: 100%; max-width: 520px; max-height: 92vh; overflow: hidden; display: flex; flex-direction: column; }
     .modal-hdr { padding: 20px 22px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
     .modal-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--primary-light); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
     .modal-title    { font-size: 16px; font-weight: 700; }
@@ -159,39 +144,25 @@
     .modal-x:hover { background: var(--bg); color: var(--danger); }
     .modal-body { padding: 20px 22px; overflow-y: auto; flex: 1; }
 
-    /* Admin tabs */
-    .adm-tabs { display: flex; gap: 4px; padding: 0 22px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-    .adm-tab  { padding: 10px 14px; font-size: 12px; font-weight: 500; color: var(--muted); border-bottom: 2px solid transparent; transition: var(--ease); }
-    .adm-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
-
-    /* Admin trip list */
-    .adm-trip-list { display: flex; flex-direction: column; gap: 6px; }
-    .adm-trip { display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap; }
-    .adm-trip-swatch { width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0; }
-    .adm-trip-info  { flex: 1; min-width: 120px; }
-    .adm-trip-name  { font-size: 13px; font-weight: 600; }
-    .adm-trip-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
-    .adm-trip-acts  { display: flex; gap: 5px; flex-wrap: wrap; }
-
     /* Form */
-    .fg { margin-bottom: 16px; }
-    .fl { display: block; font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+    .fg { margin-bottom: 14px; }
+    .fl { display: block; font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 5px; }
     .fi { width: 100%; padding: 9px 13px; border: 1px solid var(--border); border-radius: 8px; font-size: 13px; outline: none; background: var(--bg); transition: var(--ease); }
     .fi:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(29,78,216,.1); background: #fff; }
     .fi-note { font-size: 11px; color: var(--muted); margin-top: 4px; }
+    .fi-note.ok { color: var(--success); }
 
     /* Buttons */
-    .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: var(--ease); }
+    .btn { padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 7px; transition: var(--ease); cursor: pointer; }
     .btn-primary   { background: var(--primary); color: #fff; }
     .btn-primary:hover { background: var(--primary-dark); }
+    .btn-primary:disabled { opacity: .6; cursor: not-allowed; }
     .btn-secondary { background: var(--bg); border: 1px solid var(--border); color: var(--text); }
     .btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
-    .btn-danger    { background: var(--danger); color: #fff; }
-    .btn-danger:hover { background: #dc2626; }
-    .btn-success   { background: var(--success); color: #fff; }
-    .btn-sm { padding: 5px 11px; font-size: 12px; }
+    .btn-sm  { padding: 5px 11px; font-size: 12px; }
+    .btn-full { width: 100%; }
 
-    /* Leaflet tooltip */
+    /* Leaflet */
     .leaflet-tooltip { background: #1e293b; border: 1px solid #334155; color: #f1f5f9; font-size: 12px; border-radius: 6px; }
     .leaflet-tooltip-top::before { border-top-color: #334155; }
     .leaflet-popup-content-wrapper { border-radius: 10px; box-shadow: var(--shadow-lg); }
@@ -213,7 +184,7 @@
     .empty-ttl { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
     .empty-dsc { font-size: 12px; color: var(--muted); }
 
-    /* Mobile bottom sheet */
+    /* Mobile sheet */
     .mob-sheet { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-radius: 18px 18px 0 0; box-shadow: 0 -4px 24px rgba(0,0,0,.14); z-index: 600; transform: translateY(calc(100% - 110px)); transition: transform .3s cubic-bezier(.32,.72,0,1); max-height: 75vh; }
     .mob-sheet.up { transform: translateY(0); }
     .mob-sheet-handle { display: flex; justify-content: center; padding: 12px; cursor: pointer; }
@@ -228,7 +199,16 @@
     .fab { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; box-shadow: 0 4px 16px rgba(29,78,216,.4); display: flex; align-items: center; justify-content: center; font-size: 22px; transition: var(--ease); border: none; cursor: pointer; }
     .fab:hover { transform: scale(1.08); }
 
-    /* Responsive */
+    /* Reservation success screen */
+    .res-success { text-align: center; padding: 30px 20px; }
+    .res-success-ico { font-size: 52px; margin-bottom: 14px; }
+    .res-success-ttl { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+    .res-success-dsc { font-size: 13px; color: var(--muted); line-height: 1.6; }
+
+    /* Location row */
+    .loc-row { display: flex; gap: 8px; }
+    .loc-row .fi { flex: 1; }
+
     @media (max-width: 768px) {
       .sidebar   { display: none; }
       .mob-sheet { display: block; }
@@ -244,23 +224,6 @@
     }
 
     .hidden { display: none !important; }
-
-    /* Test panel */
-    .test-panel {
-      position: fixed; top: calc(var(--hh) + 10px); right: 16px;
-      background: #fff; border-radius: 14px; box-shadow: var(--shadow-lg);
-      border: 2px solid var(--amber); width: 310px; z-index: 900; overflow: hidden;
-    }
-    .test-panel-hdr {
-      background: #fffbeb; padding: 12px 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      border-bottom: 1px solid #fde68a;
-    }
-    .test-panel-title { font-size: 13px; font-weight: 700; color: #92400e; display: flex; align-items: center; gap: 8px; }
-    .test-panel-body  { padding: 16px; }
-    .test-coord-row   { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; }
-    .test-status      { font-size: 11px; color: var(--muted); margin-top: 10px; text-align: center; min-height: 16px; }
-    .hdr-btn.test-on  { background: var(--amber); border-color: var(--amber); color: #000; }
   </style>
 </head>
 
@@ -281,20 +244,14 @@
         <span class="status-dot" id="statusDot"></span>
         <span id="statusTxt">Connexion…</span>
       </div>
-      <div class="bus-pill">🚌 <span id="busCount">0</span> bus actif</div>
-      <button class="hdr-btn" id="testBtn" onclick="toggleTestPanel()">🧪 Test</button>
-      <button class="hdr-btn" onclick="openAdmin()">
+      <div class="bus-pill">🚌 <span id="busCount">0</span> actif</div>
+      <button class="hdr-btn hdr-btn-reserve" onclick="openReservation()">📅 Réserver</button>
+      <a class="hdr-btn" href="/admin">
         <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/></svg>
         Admin
-      </button>
+      </a>
     </div>
   </header>
-
-  <!-- Driver banner -->
-  <div class="driver-banner hidden" id="driverBanner">
-    🚗 Mode Conducteur actif &mdash; <span id="driverInfo"></span>
-    <button class="driver-stop-btn" onclick="stopDriver()">Arrêter</button>
-  </div>
 
   <!-- Main -->
   <div class="main">
@@ -327,7 +284,6 @@
       <div class="map-ctrl">
         <button class="map-ctrl-btn" onclick="centerOnTrip()" title="Centrer sur la ligne sélectionnée">🎯</button>
       </div>
-      <!-- Route info panel -->
       <div class="rip hidden" id="rip">
         <div class="rip-route">
           <span class="rip-dot" id="ripDot"></span>
@@ -355,9 +311,9 @@
       </div>
     </div>
 
-  </div><!-- /.main -->
+  </div>
 
-  <!-- Mobile bottom sheet -->
+  <!-- Mobile sheet -->
   <div class="mob-sheet" id="mobSheet">
     <div class="mob-sheet-handle" onclick="toggleSheet()">
       <div class="mob-sheet-bar"></div>
@@ -373,120 +329,82 @@
 
   <!-- Mobile FAB -->
   <div class="fab-wrap">
-    <button class="fab" onclick="toggleSheet()" title="Lignes">🚌</button>
+    <button class="fab" onclick="toggleSheet()">🚌</button>
   </div>
 
-</div><!-- /.app -->
+</div>
 
 <!-- Toast -->
 <div class="toast-wrap" id="toasts"></div>
 
-<!-- Test panel -->
-<div class="test-panel hidden" id="testPanel">
-  <div class="test-panel-hdr">
-    <span class="test-panel-title">🧪 Simulation Conducteur</span>
-    <button onclick="closeTestPanel()" style="font-size:16px;color:#92400e;line-height:1;">✕</button>
-  </div>
-  <div class="test-panel-body">
-    <div class="fg" style="margin-bottom:12px;">
-      <label class="fl">Ligne à simuler</label>
-      <select class="fi" id="testTripSel" onchange="onTestTripChange()"></select>
-    </div>
-    <div class="test-coord-row">
-      <div>
-        <label class="fl">Latitude</label>
-        <input class="fi" id="testLat" type="number" step="0.00001" placeholder="3.84000" />
-      </div>
-      <div>
-        <label class="fl">Longitude</label>
-        <input class="fi" id="testLng" type="number" step="0.00001" placeholder="11.50000" />
-      </div>
-    </div>
-    <button class="btn btn-primary" style="width:100%;" onclick="showTestMarker()">
-      📍 Afficher le marqueur
-    </button>
-    <button class="btn btn-secondary" style="width:100%;margin-top:8px;" onclick="clearTestMarker()">
-      🗑️ Effacer le marqueur
-    </button>
-    <div class="test-status" id="testStatus"></div>
-  </div>
-</div>
-
-<!-- Edit bar (route waypoints or stop points) -->
-<div id="wpBar" style="display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:#1e3a8a;color:#fff;border-radius:12px;padding:12px 20px;
-  align-items:center;gap:14px;z-index:1500;
-  box-shadow:0 4px 24px rgba(0,0,0,.4);font-size:13px;white-space:nowrap;">
-  <span id="wpBarLabel" style="opacity:.8;"></span>
-  <span id="wpBarInfo" style="background:rgba(255,255,255,.15);padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600;"></span>
-  <button onclick="onBarSave()"   style="background:#10b981;color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">💾 Sauvegarder</button>
-  <button onclick="onBarCancel()" style="background:rgba(255,255,255,.15);color:#fff;border:none;padding:6px 14px;border-radius:8px;font-weight:600;font-size:12px;cursor:pointer;">✕ Annuler</button>
-</div>
-
-<!-- Admin overlay -->
-<div class="overlay hidden" id="adminOverlay">
-  <div class="modal wide">
+<!-- Reservation Modal -->
+<div class="overlay hidden" id="reservationOverlay">
+  <div class="modal">
     <div class="modal-hdr">
-      <div class="modal-icon">⚙️</div>
+      <div class="modal-icon">📅</div>
       <div>
-        <div class="modal-title">Tableau de bord Administrateur</div>
-        <div class="modal-subtitle">Gestion des lignes, véhicules et arrêts</div>
+        <div class="modal-title">Réserver un véhicule</div>
+        <div class="modal-subtitle">Mekalfone Transport · Réponse sous 24h</div>
       </div>
-      <button class="modal-x" onclick="closeAdmin()">✕</button>
+      <button class="modal-x" onclick="closeReservation()">✕</button>
     </div>
-
-    <div class="adm-tabs">
-      <button class="adm-tab active" id="admTabLines" onclick="admTab('lines')">📋 Lignes</button>
-      <button class="adm-tab"        id="admTabEdit"  onclick="admTab('edit')">✏️ Modifier</button>
-    </div>
-
     <div class="modal-body">
 
-      <!-- Lignes tab -->
-      <div id="admLines">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
-          <span style="font-size:12px;color:var(--muted);">Gérez les lignes, véhicules et points d'arrêt</span>
-          <button class="btn btn-primary btn-sm" onclick="showAddForm()">+ Nouvelle ligne</button>
-        </div>
-        <div class="adm-trip-list" id="admTripList"></div>
-        <div class="hidden" id="addForm" style="margin-top:14px;padding:14px;background:var(--bg);border:1.5px dashed var(--border);border-radius:8px;">
-          <div style="font-size:13px;font-weight:600;margin-bottom:12px;">Nouvelle ligne</div>
-          <div style="display:grid;grid-template-columns:1fr auto;gap:10px;margin-bottom:12px;">
-            <div class="fg" style="margin:0;">
-              <label class="fl">Nom de la ligne</label>
-              <input class="fi" id="newName" placeholder="Ex: Mfoundi → Mokolo" />
-            </div>
-            <div class="fg" style="margin:0;">
-              <label class="fl">Couleur</label>
-              <input type="color" class="fi" id="newColor" value="#3b82f6" style="height:42px;padding:4px 6px;cursor:pointer;" />
-            </div>
+      <!-- Form area -->
+      <div id="resFormArea">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="fg">
+            <label class="fl">Nom complet *</label>
+            <input class="fi" id="resName" placeholder="Jean Dupont" />
           </div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-primary btn-sm" onclick="doAddTrip()">Créer</button>
-            <button class="btn btn-secondary btn-sm" onclick="hideAddForm()">Annuler</button>
+          <div class="fg">
+            <label class="fl">Téléphone *</label>
+            <input class="fi" id="resPhone" type="tel" placeholder="+237 6XX XXX XXX" />
           </div>
         </div>
+        <div class="fg">
+          <label class="fl">Email (pour recevoir la confirmation)</label>
+          <input class="fi" id="resEmail" type="email" placeholder="jean@example.com" />
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="fg">
+            <label class="fl">Date *</label>
+            <input class="fi" id="resDate" type="date" />
+          </div>
+          <div class="fg">
+            <label class="fl">Heure *</label>
+            <input class="fi" id="resTime" type="time" />
+          </div>
+        </div>
+        <div class="fg">
+          <label class="fl">Lieu de prise en charge *</label>
+          <div class="loc-row">
+            <input class="fi" id="resLocation" placeholder="Ex: Carrefour Mimboman, Yaoundé" />
+            <button class="btn btn-secondary btn-sm" id="resGpsBtn" onclick="useMyLocationForRes()" title="Utiliser ma position GPS">📍</button>
+          </div>
+          <div class="fi-note" id="resLocationNote"></div>
+        </div>
+        <div class="fg" style="margin-bottom:4px;">
+          <label class="fl">Message (optionnel)</label>
+          <textarea class="fi" id="resMessage" rows="3" placeholder="Précisez vos besoins, destination, nombre de passagers…" style="resize:vertical;min-height:72px;"></textarea>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.5;">
+          * Champs obligatoires. Votre demande sera examinée par un administrateur qui vous contactera.
+        </div>
+        <button class="btn btn-primary btn-full" id="resSubmitBtn" onclick="submitReservation()">
+          📤 Envoyer la demande
+        </button>
       </div>
 
-      <!-- Edit tab -->
-      <div class="hidden" id="admEdit">
-        <div class="fg">
-          <label class="fl">Nom de la ligne</label>
-          <input class="fi" id="editName" placeholder="Nom de la ligne" />
+      <!-- Success area -->
+      <div class="res-success hidden" id="resSuccessArea">
+        <div class="res-success-ico">✅</div>
+        <div class="res-success-ttl">Demande envoyée !</div>
+        <div class="res-success-dsc">
+          Votre demande de réservation a bien été reçue.<br>
+          Un membre de l'équipe Mekalfone vous contactera prochainement.
         </div>
-        <div class="fg">
-          <label class="fl">Couleur</label>
-          <input type="color" class="fi" id="editColor" value="#3b82f6" style="height:42px;padding:4px 6px;cursor:pointer;" />
-        </div>
-        <div class="fg">
-          <label class="fl">Matricule du véhicule</label>
-          <input class="fi" id="editMatricule" placeholder="Ex: DL-1234-A (laisser vide = inactif)" />
-          <div class="fi-note">Le véhicule assigné sera suivi en temps réel sur la carte.</div>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:6px;">
-          <button class="btn btn-primary" onclick="doSaveEdit()">💾 Enregistrer</button>
-          <button class="btn btn-secondary" onclick="admTab('lines')">Annuler</button>
-        </div>
+        <button class="btn btn-primary" style="margin-top:20px;" onclick="closeReservation()">Fermer</button>
       </div>
 
     </div>
@@ -496,58 +414,32 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-/* ================================================================
-   STATE
-================================================================ */
+/* ── STATE ──────────────────────────────────────────────────── */
 let trips        = [];
-let busPositions = {};   // {trip_id: {lat, lng, matricule, timestamp}}
+let busPositions = {};
 let selTripId    = null;
+let routeLayer   = null;
+let busMarker    = null;
+let lineFilter   = '';
+let activeOnly   = false;
+let sheetUp      = false;
 
-let routeLayer   = null; // L.LayerGroup for selected trip
-let busMarker    = null; // L.Marker for selected trip's bus
+let resPickupLat = null;
+let resPickupLng = null;
 
-// Waypoint editor (route points)
-let wpActive   = false;
-let wpPoints   = [];
-let wpMarkers  = [];
-let wpPreview  = null;
-let editTripId = null;
-
-// Stop points editor
-let spActive  = false;
-let spPoints  = [];   // [{name, lat, lng}]
-let spMarkers = [];
-
-// Driver mode
-let drivingMatricule = null;
-let drivingTripId    = null;
-let driverWatch      = null;
-
-let lineFilter = '';
-let activeOnly = false;
-let sheetUp    = false;
-
-/* ================================================================
-   SOCKET
-================================================================ */
+/* ── SOCKET ─────────────────────────────────────────────────── */
 const socket = io();
-socket.on('connect',              ()  => setConnected(true));
-socket.on('disconnect',           ()  => setConnected(false));
-socket.on('trips_updated',        d   => { trips = d; onTripsUpdated(); });
-socket.on('bus_positions_updated',d   => { busPositions = d; onBusesUpdated(); });
-socket.on('bus_error',            d   => toast('❌ ' + d.message, 'err'));
+socket.on('connect',               ()  => setConnected(true));
+socket.on('disconnect',            ()  => setConnected(false));
+socket.on('trips_updated',         d   => { trips = d; onTripsUpdated(); });
+socket.on('bus_positions_updated', d   => { busPositions = d; onBusesUpdated(); });
 
-/* ================================================================
-   CONNECTION STATUS
-================================================================ */
 function setConnected(on) {
   document.getElementById('statusDot').className = 'status-dot' + (on ? ' on' : '');
   document.getElementById('statusTxt').textContent = on ? 'Connecté' : 'Déconnecté';
 }
 
-/* ================================================================
-   MAP
-================================================================ */
+/* ── MAP ────────────────────────────────────────────────────── */
 const map = L.map('map', { zoomControl: false }).setView([3.848, 11.502], 13);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '© <a href="https://openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -555,28 +447,8 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
 }).addTo(map);
 L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-map.on('click', e => {
-  if (wpActive) {
-    const { lat, lng } = e.latlng;
-    wpPoints.push([lat, lng]);
-    placeWpMarker(lat, lng, wpPoints.length - 1);
-    drawWpPreview();
-    updateBar();
-  } else if (spActive) {
-    const name = prompt('Nom de cet arrêt :');
-    if (!name || !name.trim()) return;
-    const { lat, lng } = e.latlng;
-    spPoints.push({ name: name.trim(), lat, lng });
-    placeSpMarker(name.trim(), lat, lng, spPoints.length - 1);
-    updateBar();
-  }
-});
-
-/* ================================================================
-   SELECTED TRIP RENDERING
-================================================================ */
+/* ── SELECTED TRIP RENDERING ────────────────────────────────── */
 function renderSelectedTrip() {
-  // Clear previous
   if (routeLayer) { routeLayer.clearLayers(); map.removeLayer(routeLayer); routeLayer = null; }
   if (busMarker)  { map.removeLayer(busMarker); busMarker = null; }
 
@@ -585,7 +457,6 @@ function renderSelectedTrip() {
 
   routeLayer = L.layerGroup().addTo(map);
 
-  // Route polyline
   const wps = trip.waypoints || [];
   if (wps.length >= 2) {
     L.polyline(wps, { color: trip.color, weight: 5, opacity: 0.85 }).addTo(routeLayer);
@@ -595,7 +466,6 @@ function renderSelectedTrip() {
       .bindPopup('<div class="lpop"><div class="lpop-n">Terminus</div><div class="lpop-r">' + esc(trip.name) + '</div></div>');
   }
 
-  // Stop markers
   (trip.stops || []).forEach((s, i) => {
     const icon = L.divIcon({
       className: '',
@@ -606,22 +476,16 @@ function renderSelectedTrip() {
     });
     const eta = estimateWaitTime(trip, i);
     let etaLine = '';
-    if (eta === null)  etaLine = '<div style="margin-top:5px;font-size:12px;color:#6b7280;">Aucun bus en service</div>';
+    if (eta === null)   etaLine = '<div style="margin-top:5px;font-size:12px;color:#6b7280;">Aucun bus en service</div>';
     else if (eta === -1) etaLine = '<div style="margin-top:5px;font-size:12px;color:#6b7280;">Bus déjà passé</div>';
-    else               etaLine = '<div style="margin-top:5px;font-size:13px;font-weight:700;color:#1d4ed8;">⏱ Bus dans ~' + eta + ' min</div>';
+    else                etaLine = '<div style="margin-top:5px;font-size:13px;font-weight:700;color:#1d4ed8;">⏱ Bus dans ~' + eta + ' min</div>';
 
     L.marker([s.lat, s.lng], { icon }).addTo(routeLayer)
       .bindTooltip('<b>' + (i+1) + '. ' + esc(s.name) + '</b>', { direction: 'top' })
-      .bindPopup(
-        '<div class="lpop">' +
-        '<div class="lpop-n">🚏 ' + esc(s.name) + '</div>' +
-        '<div class="lpop-r">Arrêt ' + (i+1) + ' · ' + esc(trip.name) + '</div>' +
-        etaLine +
-        '</div>'
-      );
+      .bindPopup('<div class="lpop"><div class="lpop-n">🚏 ' + esc(s.name) + '</div>' +
+                 '<div class="lpop-r">Arrêt ' + (i+1) + ' · ' + esc(trip.name) + '</div>' + etaLine + '</div>');
   });
 
-  // Bus marker
   const pos = busPositions[trip.id];
   if (pos && pos.lat && pos.lng) {
     const busIcon = L.divIcon({
@@ -653,9 +517,7 @@ function routePin(color, emoji) {
   });
 }
 
-/* ================================================================
-   SIDEBAR – LINES
-================================================================ */
+/* ── SIDEBAR – LINES ────────────────────────────────────────── */
 function renderLines() {
   let list = trips;
   if (lineFilter) list = list.filter(t => t.name.toLowerCase().includes(lineFilter.toLowerCase()));
@@ -664,10 +526,10 @@ function renderLines() {
   document.getElementById('lineCount').textContent = list.length + ' ligne' + (list.length !== 1 ? 's' : '');
 
   const html = list.length ? list.map((t, i) => {
-    const dist    = routeDist(t.waypoints);
-    const stops   = (t.stops || []).length;
-    const hasBus  = !!busPositions[t.id];
-    const isSel   = t.id === selTripId;
+    const dist   = routeDist(t.waypoints);
+    const stops  = (t.stops || []).length;
+    const hasBus = !!busPositions[t.id];
+    const isSel  = t.id === selTripId;
     const matBadge = t.matricule
       ? '<span class="badge badge-on">🚌 ' + esc(t.matricule) + '</span>'
       : '<span class="badge badge-off">○ Inactif</span>';
@@ -700,7 +562,7 @@ function renderLines() {
   document.getElementById('mobLineList').innerHTML = html;
 
   const actCount = trips.filter(t => t.matricule).length;
-  document.getElementById('busCount').textContent    = actCount;
+  document.getElementById('busCount').textContent     = actCount;
   document.getElementById('mobPeekTitle').textContent = trips.length + ' ligne' + (trips.length !== 1 ? 's' : '');
   document.getElementById('mobPeekSub').textContent   = actCount > 0
     ? actCount + ' ligne' + (actCount !== 1 ? 's' : '') + ' active' + (actCount !== 1 ? 's' : '')
@@ -714,9 +576,7 @@ function toggleActiveFilter() {
   renderLines();
 }
 
-/* ================================================================
-   SELECT TRIP
-================================================================ */
+/* ── SELECT TRIP ────────────────────────────────────────────── */
 function selectTrip(tripId) {
   selTripId = tripId;
   renderLines();
@@ -728,330 +588,177 @@ function selectTrip(tripId) {
   }
 }
 
-/* ================================================================
-   ROUTE INFO PANEL
-================================================================ */
+/* ── ROUTE INFO PANEL ───────────────────────────────────────── */
 function showRip(trip) {
   document.getElementById('ripDot').style.background = trip.color;
   document.getElementById('ripName').textContent      = trip.name;
   refreshRip();
   document.getElementById('rip').classList.remove('hidden');
 }
-
-function hideRip() {
-  document.getElementById('rip').classList.add('hidden');
-}
-
+function hideRip() { document.getElementById('rip').classList.add('hidden'); }
 function refreshRip() {
   const trip = trips.find(t => t.id === selTripId);
   if (!trip) return;
   const pos  = busPositions[trip.id];
-  const dist = routeDist(trip.waypoints);
-  document.getElementById('ripBus').textContent    = pos ? pos.matricule : '–';
-  document.getElementById('ripStops').textContent  = (trip.stops || []).length;
-  document.getElementById('ripDist').textContent   = dist.toFixed(1);
+  document.getElementById('ripBus').textContent   = pos ? pos.matricule : '–';
+  document.getElementById('ripStops').textContent = (trip.stops || []).length;
+  document.getElementById('ripDist').textContent  = routeDist(trip.waypoints).toFixed(1);
 }
 
-/* ================================================================
-   ADMIN
-================================================================ */
-function openAdmin() {
-  if (wpActive) stopWp();
-  if (spActive) stopSp();
-  renderAdmList();
-  admTab('lines');
-  document.getElementById('adminOverlay').classList.remove('hidden');
-}
-function closeAdmin() {
-  document.getElementById('adminOverlay').classList.add('hidden');
+/* ── ETA ────────────────────────────────────────────────────── */
+function estimateWaitTime(trip, stopIdx) {
+  const pos = busPositions[trip.id];
+  if (!pos || !pos.lat || !pos.lng) return null;
+
+  const wps   = trip.waypoints || [];
+  const stops = trip.stops     || [];
+  if (wps.length < 2 || stopIdx >= stops.length) return null;
+
+  const stop  = stops[stopIdx];
+  const busPt = [pos.lat, pos.lng];
+  const stPt  = [stop.lat, stop.lng];
+
+  let busWpIdx = 0, minD = Infinity;
+  wps.forEach((wp, i) => { const d = haversine(busPt, wp); if (d < minD) { minD = d; busWpIdx = i; } });
+
+  let stopWpIdx = 0;
+  minD = Infinity;
+  wps.forEach((wp, i) => { const d = haversine(stPt, wp); if (d < minD) { minD = d; stopWpIdx = i; } });
+
+  if (busWpIdx >= stopWpIdx) return -1;
+
+  let dist = haversine(busPt, wps[busWpIdx]);
+  for (let i = busWpIdx; i < stopWpIdx; i++) dist += haversine(wps[i], wps[i + 1]);
+  dist += haversine(wps[stopWpIdx], stPt);
+
+  return Math.max(1, Math.round((dist / 20) * 60));
 }
 
-const ADM_TABS = {
-  lines: { btn: 'admTabLines', panel: 'admLines' },
-  edit:  { btn: 'admTabEdit',  panel: 'admEdit'  },
-};
-function admTab(tab) {
-  Object.entries(ADM_TABS).forEach(([k, v]) => {
-    document.getElementById(v.btn).classList.toggle('active', k === tab);
-    document.getElementById(v.panel).classList.toggle('hidden', k !== tab);
+function stopsEtaHtml(trip) {
+  const stops  = trip.stops || [];
+  if (!stops.length) return '';
+  const hasBus = !!busPositions[trip.id];
+
+  const rows = stops.map((s, i) => {
+    const eta = hasBus ? estimateWaitTime(trip, i) : null;
+    let timeHtml;
+    if (eta === null)   timeHtml = '<span class="rc-eta-time eta-none">Aucun bus</span>';
+    else if (eta === -1) timeHtml = '<span class="rc-eta-time eta-passed">Passé</span>';
+    else                timeHtml = '<span class="rc-eta-time eta-live">~' + eta + ' min</span>';
+
+    return '<div class="rc-eta-row">' +
+      '<div class="rc-eta-num" style="background:' + trip.color + ';">' + (i + 1) + '</div>' +
+      '<span class="rc-eta-name">' + esc(s.name) + '</span>' +
+      timeHtml +
+    '</div>';
+  }).join('');
+
+  return '<div class="rc-eta-section">' +
+    '<div class="rc-eta-hdr">⏱ Temps d\'attente estimé</div>' +
+    rows +
+    (!hasBus ? '<div style="font-size:10px;color:var(--muted);margin-top:6px;">Assignez un véhicule via le panneau admin pour voir les temps en temps réel.</div>' : '') +
+  '</div>';
+}
+
+/* ── RESERVATION ────────────────────────────────────────────── */
+function openReservation() {
+  // Reset form
+  ['resName','resPhone','resEmail','resLocation','resMessage'].forEach(id => {
+    document.getElementById(id).value = '';
   });
+  document.getElementById('resDate').value = '';
+  document.getElementById('resTime').value = '';
+  document.getElementById('resLocationNote').textContent = '';
+  document.getElementById('resLocationNote').className   = 'fi-note';
+  const btn = document.getElementById('resSubmitBtn');
+  btn.disabled = false;
+  btn.textContent = '📤 Envoyer la demande';
+  document.getElementById('resFormArea').classList.remove('hidden');
+  document.getElementById('resSuccessArea').classList.add('hidden');
+  resPickupLat = null;
+  resPickupLng = null;
+  document.getElementById('reservationOverlay').classList.remove('hidden');
 }
 
-function renderAdmList() {
-  document.getElementById('admTripList').innerHTML = trips.length
-    ? trips.map(t => {
-        const mat   = t.matricule || '';
-        const stops = (t.stops || []).length;
-        const wps   = (t.waypoints || []).length;
-        const hasBus = !!busPositions[t.id];
-        const matHtml = mat
-          ? '<span style="background:#d1fae5;color:#065f46;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;">🚌 ' + esc(mat) + '</span>'
-          : '<span style="color:var(--muted);font-size:11px;">Aucun véhicule</span>';
-
-        return '<div class="adm-trip">' +
-          '<div class="adm-trip-swatch" style="background:' + t.color + '"></div>' +
-          '<div class="adm-trip-info">' +
-            '<div class="adm-trip-name">' + esc(t.name) + '</div>' +
-            '<div class="adm-trip-meta">' + matHtml + ' · ' + wps + ' pts route · ' + stops + ' arrêts</div>' +
-          '</div>' +
-          '<div class="adm-trip-acts">' +
-            (mat ? '<button class="btn btn-success btn-sm" onclick="startDriver(\'' + t.id + '\',\'' + esc(mat) + '\')" title="Mode conducteur">🚗 Conduire</button>' : '') +
-            '<button class="btn btn-secondary btn-sm" onclick="startWpEdit(\'' + t.id + '\')" title="Modifier l\'itinéraire sur la carte">📍 Route</button>' +
-            '<button class="btn btn-secondary btn-sm" onclick="startSpEdit(\'' + t.id + '\')" title="Modifier les arrêts sur la carte">🚏 Arrêts</button>' +
-            '<button class="btn btn-secondary btn-sm" onclick="startEdit(\'' + t.id + '\')" title="Nom / couleur / matricule">✏️</button>' +
-            '<button class="btn btn-danger btn-sm" onclick="doDelete(\'' + t.id + '\')">🗑️</button>' +
-          '</div>' +
-        '</div>';
-      }).join('')
-    : '<div class="empty"><div class="empty-ico">🚌</div><div class="empty-ttl">Aucune ligne</div><div class="empty-dsc">Créez votre première ligne</div></div>';
+function closeReservation() {
+  document.getElementById('reservationOverlay').classList.add('hidden');
 }
 
-function showAddForm() { document.getElementById('addForm').classList.remove('hidden'); }
-function hideAddForm() { document.getElementById('addForm').classList.add('hidden'); document.getElementById('newName').value = ''; }
-
-function doAddTrip() {
-  const name  = document.getElementById('newName').value.trim();
-  const color = document.getElementById('newColor').value;
-  if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
-  fetch('/api/trips', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, color }) })
-    .then(() => { hideAddForm(); toast('✓ Ligne créée', 'ok'); });
+function useMyLocationForRes() {
+  if (!navigator.geolocation) { toast('GPS non disponible', 'err'); return; }
+  const btn = document.getElementById('resGpsBtn');
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(async pos => {
+    resPickupLat = pos.coords.latitude;
+    resPickupLng = pos.coords.longitude;
+    try {
+      const r = await fetch(
+        'https://nominatim.openstreetmap.org/reverse?lat=' + resPickupLat + '&lon=' + resPickupLng + '&format=json',
+        { headers: { 'Accept-Language': 'fr' } }
+      );
+      const d = await r.json();
+      document.getElementById('resLocation').value = d.display_name || (resPickupLat.toFixed(5) + ', ' + resPickupLng.toFixed(5));
+    } catch {
+      document.getElementById('resLocation').value = resPickupLat.toFixed(5) + ', ' + resPickupLng.toFixed(5);
+    }
+    const note = document.getElementById('resLocationNote');
+    note.textContent  = '✓ Position GPS confirmée (' + resPickupLat.toFixed(4) + ', ' + resPickupLng.toFixed(4) + ')';
+    note.className    = 'fi-note ok';
+    btn.textContent   = '📍';
+    btn.disabled      = false;
+  }, () => {
+    toast('Impossible d\'obtenir la position GPS', 'err');
+    btn.textContent = '📍';
+    btn.disabled    = false;
+  }, { enableHighAccuracy: true, timeout: 10000 });
 }
 
-function startEdit(id) {
-  const t = trips.find(x => x.id === id);
-  if (!t) return;
-  editTripId = id;
-  document.getElementById('editName').value      = t.name;
-  document.getElementById('editColor').value     = t.color;
-  document.getElementById('editMatricule').value = t.matricule || '';
-  admTab('edit');
-}
+async function submitReservation() {
+  const name     = document.getElementById('resName').value.trim();
+  const phone    = document.getElementById('resPhone').value.trim();
+  const email    = document.getElementById('resEmail').value.trim();
+  const date     = document.getElementById('resDate').value;
+  const time     = document.getElementById('resTime').value;
+  const location = document.getElementById('resLocation').value.trim();
+  const message  = document.getElementById('resMessage').value.trim();
 
-function doSaveEdit() {
-  if (!editTripId) return;
-  const name       = document.getElementById('editName').value.trim();
-  const color      = document.getElementById('editColor').value;
-  const matricule  = document.getElementById('editMatricule').value.trim() || null;
-  if (!name) { toast('⚠️ Entrez un nom', 'err'); return; }
-  fetch('/api/trips/' + editTripId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, color, matricule })
-  }).then(() => { toast('✓ Ligne modifiée', 'ok'); admTab('lines'); });
-}
+  if (!name)     { toast('⚠️ Entrez votre nom complet', 'err'); return; }
+  if (!phone)    { toast('⚠️ Entrez votre numéro de téléphone', 'err'); return; }
+  if (!date)     { toast('⚠️ Choisissez une date', 'err'); return; }
+  if (!time)     { toast('⚠️ Choisissez une heure', 'err'); return; }
+  if (!location) { toast('⚠️ Indiquez votre lieu de prise en charge', 'err'); return; }
 
-function doDelete(id) {
-  if (!confirm('Supprimer cette ligne ?')) return;
-  fetch('/api/trips/' + id, { method: 'DELETE' }).then(() => toast('Ligne supprimée'));
-}
+  const btn = document.getElementById('resSubmitBtn');
+  btn.disabled    = true;
+  btn.textContent = 'Envoi en cours…';
 
-/* ================================================================
-   WAYPOINT EDITOR (route)
-================================================================ */
-function startWpEdit(id) {
-  const t = trips.find(x => x.id === id);
-  if (!t) return;
-  editTripId = id;
-  wpPoints   = (t.waypoints || []).map(p => [...p]);
-  document.getElementById('adminOverlay').classList.add('hidden');
-  wpActive = true;
-  map.getContainer().style.cursor = 'crosshair';
-  clearWpMarkers();
-  wpPoints.forEach((p, i) => placeWpMarker(p[0], p[1], i, t.color));
-  drawWpPreview(t.color);
-  updateBar();
-  document.getElementById('wpBar').style.display = 'flex';
-  if (wpPoints.length >= 2) {
-    map.fitBounds(L.latLngBounds(wpPoints.map(p => L.latLng(p[0], p[1]))), { padding: [60, 60] });
+  try {
+    const r = await fetch('/api/reservations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, phone, email, date, time, location,
+                             pickup_lat: resPickupLat, pickup_lng: resPickupLng, message })
+    });
+    if (!r.ok) { const e = await r.json(); throw new Error(e.error || 'Erreur serveur'); }
+    document.getElementById('resFormArea').classList.add('hidden');
+    document.getElementById('resSuccessArea').classList.remove('hidden');
+    resPickupLat = null;
+    resPickupLng = null;
+  } catch(e) {
+    toast('❌ ' + (e.message || 'Erreur lors de l\'envoi'), 'err');
+    btn.disabled    = false;
+    btn.textContent = '📤 Envoyer la demande';
   }
 }
 
-function placeWpMarker(lat, lng, idx, color) {
-  color = color || (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
-  const m = L.circleMarker([lat, lng], { radius: 8, fillColor: color, color: '#fff', weight: 2, fillOpacity: 1 }).addTo(map);
-  m.bindTooltip('Point ' + (idx + 1), { direction: 'top' });
-  m.on('contextmenu', () => {
-    const i = wpMarkers.indexOf(m);
-    if (i === -1) return;
-    map.removeLayer(m);
-    wpMarkers.splice(i, 1);
-    wpPoints.splice(i, 1);
-    wpMarkers.forEach((mk, j) => mk.setTooltipContent('Point ' + (j + 1)));
-    drawWpPreview();
-    updateBar();
-  });
-  wpMarkers.push(m);
-}
-
-function clearWpMarkers() {
-  wpMarkers.forEach(m => map.removeLayer(m));
-  wpMarkers = [];
-  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
-}
-
-function drawWpPreview(color) {
-  if (wpPreview) { map.removeLayer(wpPreview); wpPreview = null; }
-  color = color || (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
-  if (wpPoints.length >= 2) {
-    wpPreview = L.polyline(wpPoints, { color, weight: 4, opacity: 0.7, dashArray: '8 5' }).addTo(map);
-  }
-}
-
-function stopWp() {
-  wpActive = false;
-  map.getContainer().style.cursor = '';
-  document.getElementById('wpBar').style.display = 'none';
-  clearWpMarkers();
-}
-
-function saveWp() {
-  if (wpPoints.length < 2) { toast('⚠️ Ajoutez au moins 2 points', 'err'); return; }
-  fetch('/api/trips/' + editTripId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ waypoints: wpPoints })
-  }).then(() => {
-    stopWp();
-    openAdmin();
-    admTab('lines');
-    toast('✓ Itinéraire sauvegardé', 'ok');
-  });
-}
-
-/* ================================================================
-   STOP POINTS EDITOR
-================================================================ */
-function startSpEdit(id) {
-  const t = trips.find(x => x.id === id);
-  if (!t) return;
-  editTripId = id;
-  spPoints   = (t.stops || []).map(s => ({ ...s }));
-  document.getElementById('adminOverlay').classList.add('hidden');
-  spActive = true;
-  map.getContainer().style.cursor = 'crosshair';
-  clearSpMarkers();
-  spPoints.forEach((s, i) => placeSpMarker(s.name, s.lat, s.lng, i, t.color));
-  updateBar();
-  document.getElementById('wpBar').style.display = 'flex';
-  if (spPoints.length >= 1) {
-    map.fitBounds(L.latLngBounds(spPoints.map(s => L.latLng(s.lat, s.lng))), { padding: [60, 60] });
-  }
-}
-
-function placeSpMarker(name, lat, lng, idx, color) {
-  color = color || (trips.find(t => t.id === editTripId) || {}).color || '#3b82f6';
-  const icon = L.divIcon({
-    className: '',
-    html: '<div style="width:24px;height:24px;background:#fff;border:3px solid ' + color + ';' +
-          'border-radius:5px;display:flex;align-items:center;justify-content:center;' +
-          'font-size:10px;font-weight:700;color:' + color + ';box-shadow:0 1px 4px rgba(0,0,0,.25);">' + (idx+1) + '</div>',
-    iconSize: [24,24], iconAnchor: [12,12]
-  });
-  const m = L.marker([lat, lng], { icon }).addTo(map)
-    .bindTooltip((idx + 1) + '. ' + name, { direction: 'top' });
-  m.on('contextmenu', () => {
-    const i = spMarkers.indexOf(m);
-    if (i === -1) return;
-    map.removeLayer(m);
-    spMarkers.splice(i, 1);
-    spPoints.splice(i, 1);
-    spMarkers.forEach((mk, j) => mk.setTooltipContent((j+1) + '. ' + spPoints[j].name));
-    updateBar();
-  });
-  spMarkers.push(m);
-}
-
-function clearSpMarkers() {
-  spMarkers.forEach(m => map.removeLayer(m));
-  spMarkers = [];
-}
-
-function stopSp() {
-  spActive = false;
-  map.getContainer().style.cursor = '';
-  document.getElementById('wpBar').style.display = 'none';
-  clearSpMarkers();
-}
-
-function saveSp() {
-  fetch('/api/trips/' + editTripId, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ stops: spPoints })
-  }).then(() => {
-    stopSp();
-    openAdmin();
-    admTab('lines');
-    toast('✓ Arrêts sauvegardés', 'ok');
-  });
-}
-
-/* ================================================================
-   EDIT BAR (shared for wp + sp)
-================================================================ */
-function updateBar() {
-  if (wpActive) {
-    document.getElementById('wpBarLabel').textContent = '📍 Cliquez pour ajouter des points · Clic droit pour supprimer';
-    document.getElementById('wpBarInfo').textContent  = wpPoints.length + ' point' + (wpPoints.length !== 1 ? 's' : '');
-  } else if (spActive) {
-    document.getElementById('wpBarLabel').textContent = '🚏 Cliquez pour ajouter un arrêt · Clic droit pour supprimer';
-    document.getElementById('wpBarInfo').textContent  = spPoints.length + ' arrêt' + (spPoints.length !== 1 ? 's' : '');
-  }
-}
-
-function onBarSave()   { if (wpActive) saveWp(); else if (spActive) saveSp(); }
-function onBarCancel() {
-  if (wpActive) stopWp(); else if (spActive) stopSp();
-  openAdmin();
-  admTab('lines');
-}
-
-/* ================================================================
-   DRIVER MODE
-================================================================ */
-function startDriver(tripId, matricule) {
-  if (!navigator.geolocation) { toast('❌ GPS non disponible sur cet appareil', 'err'); return; }
-  drivingTripId    = tripId;
-  drivingMatricule = matricule;
-  closeAdmin();
-
-  driverWatch = navigator.geolocation.watchPosition(
-    p => {
-      socket.emit('bus_location_update', {
-        matricule: drivingMatricule,
-        lat: p.coords.latitude,
-        lng: p.coords.longitude
-      });
-    },
-    () => toast('⚠️ Erreur GPS — réessai dans 5 s', 'err'),
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 2000 }
-  );
-
-  const trip = trips.find(t => t.id === tripId);
-  document.getElementById('driverInfo').textContent = (trip ? trip.name + ' · ' : '') + matricule;
-  document.getElementById('driverBanner').classList.remove('hidden');
-  toast('🚗 Mode conducteur activé', 'ok');
-}
-
-function stopDriver() {
-  if (driverWatch !== null) { navigator.geolocation.clearWatch(driverWatch); driverWatch = null; }
-  drivingMatricule = null;
-  drivingTripId    = null;
-  document.getElementById('driverBanner').classList.add('hidden');
-  toast('Mode conducteur désactivé');
-}
-
-/* ================================================================
-   MOBILE SHEET
-================================================================ */
+/* ── MOBILE SHEET ───────────────────────────────────────────── */
 function toggleSheet() {
   sheetUp = !sheetUp;
   document.getElementById('mobSheet').classList.toggle('up', sheetUp);
 }
 
-/* ================================================================
-   TOAST
-================================================================ */
+/* ── TOAST ──────────────────────────────────────────────────── */
 function toast(msg, type = '') {
   const el = document.createElement('div');
   el.className = 'toast ' + type;
@@ -1063,13 +770,9 @@ function toast(msg, type = '') {
   }, 3500);
 }
 
-/* ================================================================
-   UPDATE HANDLERS
-================================================================ */
+/* ── UPDATE HANDLERS ────────────────────────────────────────── */
 function onTripsUpdated() {
   renderLines();
-  renderAdmList();
-  // Auto-select first active trip, or first trip overall
   if (!selTripId) {
     const first = trips.find(t => t.matricule) || trips[0];
     if (first) selectTrip(first.id);
@@ -1085,9 +788,7 @@ function onBusesUpdated() {
   refreshRip();
 }
 
-/* ================================================================
-   UTILS
-================================================================ */
+/* ── UTILS ──────────────────────────────────────────────────── */
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -1103,188 +804,6 @@ function haversine([lat1,lon1],[lat2,lon2]) {
   const R = 6371, dLat = (lat2-lat1)*Math.PI/180, dLon = (lon2-lon1)*Math.PI/180;
   const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
-
-/* ================================================================
-   ETA / WAIT TIME CALCULATION
-================================================================ */
-// Returns: null (no bus), -1 (bus already passed), or minutes (integer ≥ 1)
-function estimateWaitTime(trip, stopIdx) {
-  // Simulation position takes priority over real bus position
-  let pos;
-  if (testSimPos && testSimPos.tripId === trip.id) {
-    pos = { lat: testSimPos.lat, lng: testSimPos.lng };
-  } else {
-    pos = busPositions[trip.id];
-  }
-  if (!pos || !pos.lat || !pos.lng) return null;
-
-  const wps   = trip.waypoints || [];
-  const stops = trip.stops     || [];
-  if (wps.length < 2 || stopIdx >= stops.length) return null;
-
-  const stop  = stops[stopIdx];
-  const busPt = [pos.lat, pos.lng];
-  const stPt  = [stop.lat, stop.lng];
-
-  // Nearest waypoint index to bus current position
-  let busWpIdx = 0, minD = Infinity;
-  wps.forEach((wp, i) => { const d = haversine(busPt, wp); if (d < minD) { minD = d; busWpIdx = i; } });
-
-  // Nearest waypoint index to stop
-  let stopWpIdx = 0;
-  minD = Infinity;
-  wps.forEach((wp, i) => { const d = haversine(stPt, wp); if (d < minD) { minD = d; stopWpIdx = i; } });
-
-  // Bus at or past stop
-  if (busWpIdx >= stopWpIdx) return -1;
-
-  // Distance along route: bus → nearest wp → ... → stop's wp → stop
-  let dist = haversine(busPt, wps[busWpIdx]);
-  for (let i = busWpIdx; i < stopWpIdx; i++) dist += haversine(wps[i], wps[i + 1]);
-  dist += haversine(wps[stopWpIdx], stPt);
-
-  // Average urban speed: 20 km/h
-  return Math.max(1, Math.round((dist / 20) * 60));
-}
-
-// Builds the ETA section HTML for a route card
-function stopsEtaHtml(trip) {
-  const stops    = trip.stops || [];
-  if (!stops.length) return '';
-  const isSimMode = !!(testSimPos && testSimPos.tripId === trip.id);
-  const hasBus    = !!busPositions[trip.id] || isSimMode;
-
-  const rows = stops.map((s, i) => {
-    const eta = hasBus ? estimateWaitTime(trip, i) : null;
-    let timeHtml;
-    if (eta === null)  timeHtml = '<span class="rc-eta-time eta-none">Aucun bus</span>';
-    else if (eta === -1) timeHtml = '<span class="rc-eta-time eta-passed">Passé</span>';
-    else               timeHtml = '<span class="rc-eta-time eta-live">~' + eta + ' min</span>';
-
-    return '<div class="rc-eta-row">' +
-      '<div class="rc-eta-num" style="background:' + trip.color + ';">' + (i + 1) + '</div>' +
-      '<span class="rc-eta-name">' + esc(s.name) + '</span>' +
-      timeHtml +
-    '</div>';
-  }).join('');
-
-  const simBadge = isSimMode
-    ? ' <span style="background:#fef3c7;color:#92400e;font-size:9px;font-weight:700;padding:1px 6px;border-radius:4px;vertical-align:middle;">🧪 SIM</span>'
-    : '';
-
-  return '<div class="rc-eta-section">' +
-    '<div class="rc-eta-hdr">⏱ Temps d\'attente estimé' + simBadge + '</div>' +
-    rows +
-    (!hasBus ? '<div style="font-size:10px;color:var(--muted);margin-top:6px;">Assignez un véhicule pour voir les temps d\'attente en temps réel.</div>' : '') +
-  '</div>';
-}
-
-/* ================================================================
-   TEST / SIMULATION MODE
-================================================================ */
-let testMarker    = null;
-let testPanelOpen = false;
-let testSimPos    = null;  // {tripId, lat, lng} — active simulation position
-
-function toggleTestPanel() {
-  testPanelOpen = !testPanelOpen;
-  document.getElementById('testPanel').classList.toggle('hidden', !testPanelOpen);
-  document.getElementById('testBtn').classList.toggle('test-on', testPanelOpen);
-  if (testPanelOpen) populateTestTrips();
-}
-
-function closeTestPanel() {
-  testPanelOpen = false;
-  document.getElementById('testPanel').classList.add('hidden');
-  document.getElementById('testBtn').classList.remove('test-on');
-  clearTestMarker();
-}
-
-function populateTestTrips() {
-  const sel = document.getElementById('testTripSel');
-  sel.innerHTML = trips.map(t =>
-    '<option value="' + t.id + '">' + esc(t.name) +
-    (t.matricule ? ' (' + esc(t.matricule) + ')' : ' — inactif') + '</option>'
-  ).join('');
-  // Pre-fill coords with centre of selected trip's waypoints
-  onTestTripChange();
-}
-
-function onTestTripChange() {
-  const tripId = document.getElementById('testTripSel').value;
-  const trip   = trips.find(t => t.id === tripId);
-  if (!trip || !(trip.waypoints || []).length) return;
-  // Use midpoint of waypoints as default coords
-  const mid = trip.waypoints[Math.floor(trip.waypoints.length / 2)];
-  document.getElementById('testLat').value = mid[0].toFixed(5);
-  document.getElementById('testLng').value = mid[1].toFixed(5);
-  setTestStatus('');
-}
-
-function showTestMarker() {
-  const tripId = document.getElementById('testTripSel').value;
-  const lat    = parseFloat(document.getElementById('testLat').value);
-  const lng    = parseFloat(document.getElementById('testLng').value);
-
-  if (!tripId)             { setTestStatus('⚠️ Sélectionnez une ligne'); return; }
-  if (isNaN(lat) || isNaN(lng)) { setTestStatus('⚠️ Coordonnées invalides'); return; }
-  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) { setTestStatus('⚠️ Coordonnées hors limites'); return; }
-
-  const trip = trips.find(t => t.id === tripId);
-  if (!trip) return;
-
-  // Remove old test marker
-  if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
-
-  const icon = L.divIcon({
-    className: '',
-    html: '<div style="position:relative;width:44px;height:44px;">' +
-          '<div style="width:44px;height:44px;background:' + trip.color + ';' +
-          'border:3px dashed #fff;border-radius:50%;display:flex;align-items:center;' +
-          'justify-content:center;font-size:22px;opacity:.9;' +
-          'box-shadow:0 0 0 3px ' + trip.color + '55,0 2px 10px rgba(0,0,0,.3);">🚌</div>' +
-          '<div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);' +
-          'background:#f59e0b;color:#000;font-size:9px;font-weight:800;' +
-          'padding:1px 6px;border-radius:4px;white-space:nowrap;letter-spacing:.05em;">TEST</div>' +
-          '</div>',
-    iconSize: [44, 44], iconAnchor: [22, 22]
-  });
-
-  testMarker = L.marker([lat, lng], { icon, zIndexOffset: 2000 })
-    .addTo(map)
-    .bindPopup(
-      '<div class="lpop">' +
-      '<div class="lpop-n">🧪 TEST — ' + esc(trip.name) + '</div>' +
-      '<div class="lpop-r">Lat : ' + lat.toFixed(5) + ' · Lng : ' + lng.toFixed(5) + '</div>' +
-      '</div>'
-    );
-
-  // Activate simulation position so ETAs are computed from this point
-  testSimPos = { tripId, lat, lng };
-
-  // Switch to tested trip (or just re-render if already selected)
-  if (selTripId !== tripId) {
-    selectTrip(tripId);
-  } else {
-    renderLines();
-    renderSelectedTrip();
-  }
-
-  map.setView([lat, lng], 15, { animate: true });
-  setTestStatus('✓ Marqueur placé · ' + lat.toFixed(4) + ', ' + lng.toFixed(4));
-}
-
-function clearTestMarker() {
-  if (testMarker) { map.removeLayer(testMarker); testMarker = null; }
-  testSimPos = null;
-  renderLines();
-  renderSelectedTrip();
-  setTestStatus('Marqueur effacé');
-}
-
-function setTestStatus(msg) {
-  document.getElementById('testStatus').textContent = msg;
 }
 </script>
 </body>
