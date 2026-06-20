@@ -534,7 +534,7 @@ function renderAdmList() {
         '<span class="adm-stats">' + wps + ' pts · ' + stops + ' arrêts · ' + dist.toFixed(1) + ' km</span>' +
         (wps >= 2 ? '<button class="btn btn-secondary btn-xs" onclick="startWpEdit(\'' + t.id + '\')"     title="Modifier l\'itinéraire">📍 Route</button>' : '') +
         '<button class="btn btn-secondary btn-xs" onclick="startSpEdit(\'' + t.id + '\')"   title="Modifier les arrêts">🚏 Arrêts</button>' +
-        (wps >= 2 ? '<button class="btn btn-secondary btn-xs" onclick="createReturnTrip(\'' + t.id + '\')" title="Créer le trajet retour">↩️ Retour</button>' : '') +
+        (wps >= 2 ? '<button class="btn btn-secondary btn-xs" onclick="createReturnTrip(\'' + t.id + '\')" title="Transformer en aller-retour">🔄 Aller-retour</button>' : '') +
         (mat      ? '<button class="btn btn-success btn-xs"   onclick="startDriver(\'' + t.id + '\',\'' + esc(mat) + '\')" title="Activer le GPS conducteur">🚗 Conduire</button>' : '') +
       '</div>' +
 
@@ -584,28 +584,35 @@ function toggleEditForm(id) {
 
 function createReturnTrip(id) {
   const t = trips.find(x => x.id === id);
-  if (!t || (t.waypoints || []).length < 2) { toast('⚠️ Aucun itinéraire défini', 'err'); return; }
+  const wps   = t ? (t.waypoints || []) : [];
+  const stops = t ? (t.stops    || []) : [];
+  if (wps.length < 2) { toast('⚠️ Aucun itinéraire défini', 'err'); return; }
 
-  // Build return name: reverse "A → B" to "B → A"
-  let retName;
-  if (t.name.includes('→')) {
-    retName = t.name.split('→').map(s => s.trim()).reverse().join(' → ');
-  } else {
-    retName = t.name + ' – Retour';
+  // Guard: first point == last point means the round-trip was already applied
+  const first = wps[0], last = wps[wps.length - 1];
+  if (first[0] === last[0] && first[1] === last[1]) {
+    toast('⚠️ Ce trajet est déjà un aller-retour', 'err');
+    return;
   }
 
-  if (!confirm('Créer le trajet retour "' + retName + '" ?\n\nLes points de passage et arrêts seront inversés automatiquement.')) return;
+  const n = wps.length;
+  if (!confirm(
+    'Transformer "' + t.name + '" en aller-retour ?\n\n' +
+    'Les ' + n + ' points deviennent ' + (2 * n - 1) + ' points :\n' +
+    '[A → … → D]  devient  [A → … → D → … → A]\n\n' +
+    'Les arrêts sont également inversés sur le retour.\n' +
+    'Cette action modifie le trajet existant.'
+  )) return;
 
-  const revWps   = [...t.waypoints].reverse();
-  const revStops = [...(t.stops || [])].reverse();
+  // [1,2,3,4] → [1,2,3,4,3,2,1]  (reversed minus the endpoint already present)
+  const newWps   = [...wps,   ...[...wps].reverse().slice(1)];
+  const newStops = [...stops, ...[...stops].reverse().slice(1)];
 
-  fetch('/api/trips', {
-    method: 'POST',
+  fetch('/api/trips/' + id, {
+    method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: retName, color: t.color, waypoints: revWps, stops: revStops })
-  }).then(r => r.json()).then(newTrip => {
-    toast('✓ Trajet retour "' + retName + '" créé', 'ok');
-  });
+    body: JSON.stringify({ waypoints: newWps, stops: newStops })
+  }).then(() => toast('✓ Aller-retour appliqué — ' + newWps.length + ' points au total', 'ok'));
 }
 
 function doSaveEdit(id) {
